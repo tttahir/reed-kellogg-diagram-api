@@ -1,13 +1,5 @@
 {
-  "server-log": "server.log",
   "server-protocol": "http://",
-  "prediction": "emp2",
   "server-port": "80",
-  "server-ip": "aiwriter.ru",
-  "server-port2": "8882",
-  "server-ip2": "188.93.109.16",
-  "server-port3": "8883",
-  "how_need": "150",
-  "c1": 300,
-  "z": 1000
+  "server-ip": "localhost"
 }
