@@ -39,11 +39,11 @@ function processSentence() {
 var sentence = document.getElementById('sentence');
 
 /* нет примера для 5-го правила */
-sentence.value = "Old as Mary and you"; // [[4,0], [4,1], [6,0], [6,1]]
+// sentence.value = "Old as Mary and you"; // [[4,0], [4,1], [6,0], [6,1]]
 // sentence.value = "Hello i'm your daughter"; // [[0,0], [1,0], [2,0], [3,0]]
 // sentence.value = "Ellen needs help"; // [[1,0], [1,1]]
 // sentence.value = "She's not as old as Mary"; // [[1,0], [3,0], [2,0], [4,0], [4,1]]
-// sentence.value = "The visitors from El Paso"; // [[3,0], [0,0], [4,1], [4,0]]
+sentence.value = "The visitors from El Paso arrived on schedule"; // [[1,0], [3,0], [0,0], [4,1], [4,0]]
 // sentence.value = "My parents saw them at a concert a long time ago"; // [[1,0], [3,0], [1,1], [4,1], [7,0], [4,0]]
 // sentence.value = "Jennifer took on two paper routes to earn money for camp"; // [[1,0], [0,0], [1,1], [4,1], [8,0], [4,0]]
 // sentence.value = "The house looks tidy and good, but the yard is a mess and a bad"; // [[1,0], [3,0], [2,0], [6,1], [6,0], [0,0], [10,0], [10,1]]
@@ -63,7 +63,7 @@ sentence.value = "Old as Mary and you"; // [[4,0], [4,1], [6,0], [6,1]]
 // sentence.value = "He left early because he felt sick"; // [[1,0], [3,0], [7,0], [7,1], [2,0]]
 // sentence.value = "We are campers tired but happy"; // [[1,0], [2,0], [3,0], [6,0], [6,1]]
 // sentence.value = "He can and should finish the job"; // [[1,0], [11,0], [6,0], [1,1], [3,0]]
-// sentence.value = "Everyone wondered when would start to play"; // [[1,0], [7,0], [3,0], [11,0], [9,1]]
+// sentence.value = "Everyone wondered when would end the play"; // [[1,0], [1,1], [7,0], [3,0], [11,0]]
 // sentence.value = "The students worked so very hard"; // [[1,0], [3,0], [3,0], [3,0], [3,0]]
 
 
@@ -80,7 +80,6 @@ var tpl = 3; // text padding left
 var tInd = 20; // text indent
 var rule6Union = ''; // союз 6-го правила
 var rule4Prepos = ''; // объект предлога 4-го правила
-var drawParent = true;
 
 // return text width
 function tw(str) { return graph.measureText(str).width; }
@@ -124,7 +123,6 @@ function drawSentences() {
   graph.scale(scale.value, scale.value);
   graph.beginPath();
   x = xs; y = ys;
-  drawParent = true;
   graph.moveTo(x, y);
   coords = {};
 
@@ -162,7 +160,7 @@ function rule1Draw(id, subRule, child, parent, hasChild) {
         'y': y,
         'as': 'parent'
       };
-      graph.lineTo(x += tInd + tw(parent) + tInd, y);
+      graph.lineTo(x += tInd*2 + tw(parent), y);
     }
 
     graph.moveTo(x, y - 25);
@@ -173,7 +171,7 @@ function rule1Draw(id, subRule, child, parent, hasChild) {
       'y': y,
       'as': 'child'
     };
-    graph.lineTo(x += tInd + tw(child) + tInd, y);
+    graph.lineTo(x += tInd*2 + tw(child), y);
   } else { // subRule == 0
     // __ child __|__ parent __
     //            |
@@ -189,7 +187,7 @@ function rule1Draw(id, subRule, child, parent, hasChild) {
       'y': y,
       'as': 'child'
     };
-    graph.lineTo(x += tInd + tw(child) + tInd, y);
+    graph.lineTo(x += tInd*2 + tw(child), y);
     graph.moveTo(x, y + 25);
     graph.lineTo(x, y - 25);
     graph.moveTo(x, y);
@@ -201,14 +199,14 @@ function rule1Draw(id, subRule, child, parent, hasChild) {
         'y': y,
         'as': 'parent'
       };
-      graph.lineTo(x += tInd + tw(parent) + tInd, y);
+      graph.lineTo(x += tInd*2 + tw(parent), y);
     }
   }
 }
 
 function rule2Draw(id, subRule, child, parent, hasChild) {
   // subRule не используется
-  // ___parent___\___child____
+  // ___ parent ___\___ child ____
   console.log('rule2Draw:', id, subRule, child, parent, hasChild);
   var parentKey = parent + '_' + (id - 1);
   var childKey = child + '_' + id;
@@ -223,7 +221,7 @@ function rule2Draw(id, subRule, child, parent, hasChild) {
       'y': y,
       'as': 'parent'
     };
-    graph.lineTo(x += tInd + tw(parent) + tInd + 10, y);
+    graph.lineTo(x += tInd*2 + tw(parent) + 10, y);
   }
 
   graph.moveTo(x - 16, y - deg50(16));
@@ -234,23 +232,23 @@ function rule2Draw(id, subRule, child, parent, hasChild) {
     'y': y,
     'as': 'child'
   };
-  graph.lineTo(x += tInd + tw(child) + tInd, y);
+  graph.lineTo(x += tInd*2 + tw(child), y);
 }
 
 function rule3Draw(id, subRule, child, parent, hasChild) {
   // subRule не используется
-  // __parent__
-  //           \
-  //            \child
+  // __ parent __
   //             \
+  //              \ child
+  //               \
   console.log('rule3Draw:', id, subRule, child, parent, hasChild);
   var parentKey = parent + '_' + (id - 1);
   var childKey = child + '_' + id;
+  var xt = 0;
 
   if (parentKey in coords) {
     x = coords[parentKey].x;
     y = coords[parentKey].y;
-    graph.moveTo(x, y);
   } else {
     graph.fillText(parent, x + tInd, y - tpb);
     coords[parentKey] = {
@@ -258,12 +256,14 @@ function rule3Draw(id, subRule, child, parent, hasChild) {
       'y': y,
       'as': 'parent'
     };
-    graph.lineTo(x += tInd + tw(parent) + tInd, y);
-    drawParent = false;
+    graph.lineTo((x += tInd) + tw(parent) + tInd, y);
   }
   
+  graph.moveTo(x, y);
   graph.lineTo(x += 30, y += deg50(30));
-  graph.fillText(child, x - 15 + th/2, y - deg50(15)); // 15 = 30/2
+  xt = x - 15 + th/2;
+  coords[parentKey]['right'] = Math.max(x, xt);
+  graph.fillText(child, xt, y - deg50(15)); // 15 = 30/2
   coords[childKey] = {
     'x': x,
     'y': y,
@@ -278,12 +278,12 @@ function rule4Draw(id, subRule, child, parent, hasChild) {
     // __________
     //           \
     //            \ parent
-    //             \__child__
+    //             \__ child __
     var parentKey = rule4Prepos + '_' + (id - 2);
     var childKey = child + '_' + id;
 
     if (parentKey in coords) {
-      x = coords[parentKey].x + tw(rule4Prepos) + tInd;
+      x = coords[parentKey].x;
       y = coords[parentKey].y;
       graph.moveTo(x, y);
     } else {
@@ -307,10 +307,10 @@ function rule4Draw(id, subRule, child, parent, hasChild) {
     graph.lineTo(x += tInd + tw(child) + tInd, y);
     rule4Prepos = '';
   } else { // subRule == 0
-    // __parent__
-    //           \
-    //            \ child
-    //             \________
+    // __ parent __
+    //             \
+    //              \ child
+    //               \________
     rule4Prepos = parent;
   }
 }
@@ -318,10 +318,10 @@ function rule4Draw(id, subRule, child, parent, hasChild) {
 function rule5Draw(id, subRule, child, parent, hasChild) {
   console.log('rule5Draw:', id, subRule, child, parent, hasChild);
   // subRule не используется
-  // __parent__
-  //           \
-  //            \
-  //             \__child__
+  // __ parent __
+  //             \
+  //              \
+  //               \__ child __
   graph.fillText(parent, x + tInd, y - tpb);
   graph.lineTo(x += tInd + tw(parent) + tInd, y);
   graph.lineTo(x += 30, y += deg50(30));
@@ -333,11 +333,11 @@ function rule6Draw(id, subRule, child, parent, hasChild) {
   console.log('rule6Draw:', id, subRule, child, parent, hasChild);
   if (subRule) { // subRule == 1
     // дописываем child к подправилу subRule == 0
-    //   ___child____
-    //  /            |\
-    // /  rule6Union | \
-    // \             | /
-    //  \___parent___|/
+    //   ___ child ____
+    //  /              |\
+    // /    rule6Union | \
+    // \               | /
+    //  \___ parent ___|/
     var mLen = Math.max(tw(rule6Union), tw(child), tw(parent));
     var lw = tInd + mLen + tInd, xt = 0, yt = 0, lh = 25;
 
@@ -375,18 +375,18 @@ function rule7Draw(id, subRule, child, parent, hasChild, noLog) {
   if (!noLog) console.log('rule7Draw:', id, subRule, child, parent, hasChild);
 
   if (subRule) { // subRule == 1
-    // __first_sentence_root:_ parent__
+    // __ first sentence root: parent __
     //         |
     //         | child
     //         |
     graph.fillText(child, x + tpl, y - 55); // 55 = 110/2
     graph.moveTo(x, y);
   } else { // subRule == 0
-    // __first_sentence_root:_parent__
+    // __ first sentence root: parent __
     //         |
     //         |
     //         |
-    //  __second_sentence_root:_child__
+    //  __ second sentence root: child __
     var parentKey = parent + '_' + (id - 1);
 
     if (parentKey in coords) {
@@ -403,23 +403,20 @@ function rule7Draw(id, subRule, child, parent, hasChild, noLog) {
 function rule8Draw(id, subRule, child, parent, hasChild) {
   console.log('rule8Draw:', id, subRule, child, parent, hasChild);
   // subRule не используется
-  // __first_sentence_root:__parent__
-  //         \
-  //          \to
-  //           \__second_sentence_root:_child__
-  var first = 'first sentence root: ' + parent;
-  var second = 'second sentence root: ' + child;
-  var fc = tInd + tw(first) + tInd;
+  // __ first sentence root: parent __
+  //          \
+  //           \ to
+  //            \__ second sentence root: child __
+  var parentKey = parent + '_' + (id - 1);
 
-  graph.fillText(first, x + tInd, y - tpb);
-  graph.lineTo(x + fc, y);
-  graph.moveTo(x += fc/2, y);
+  if (parentKey in coords) {
+    x = coords[parentKey].x;
+    y = coords[parentKey].y;
+    graph.moveTo(x, y);
+  }
 
   graph.lineTo(x += 50, y += deg50(50));
   graph.fillText('to', x - 25 + th/2, y - deg50(25)); // 25 = 50/2
-
-  graph.fillText(second, x, y - tpb);
-  graph.lineTo(x += tInd + tw(second) + tInd, y);
 }
 
 function rule9Draw(id, subRule, child, parent, hasChild) {
