@@ -43,7 +43,7 @@ var sentence = document.getElementById('sentence');
 // sentence.value = "Hello i'm your daughter"; // [[0,0], [1,0], [2,0], [3,0]]
 // sentence.value = "Ellen needs help"; // [[1,0], [1,1]]
 // sentence.value = "She's not as old as Mary"; // [[1,0], [3,0], [2,0], [4,0], [4,1]]
-sentence.value = "The visitors from El Paso arrived on schedule"; // [[1,0], [3,0], [0,0], [4,1], [4,0]]
+// sentence.value = "The visitors from El Paso arrived on schedule"; // [[1,0], [3,0], [0,0], [4,1], [4,0]]
 // sentence.value = "My parents saw them at a concert a long time ago"; // [[1,0], [3,0], [1,1], [4,1], [7,0], [4,0]]
 // sentence.value = "Jennifer took on two paper routes to earn money for camp"; // [[1,0], [0,0], [1,1], [4,1], [8,0], [4,0]]
 // sentence.value = "The house looks tidy and good, but the yard is a mess and a bad"; // [[1,0], [3,0], [2,0], [6,1], [6,0], [0,0], [10,0], [10,1]]
@@ -52,7 +52,9 @@ sentence.value = "The visitors from El Paso arrived on schedule"; // [[1,0], [3,
 // sentence.value = "A long time ago the house looked neat and nice, like a new one, but eventually became obsolete";
 
 // sentence.value = "Tom stopped to take a close look at the car"; // [[1,0], [9,1], [11,0], [1,1], [3,0], [4,0], [4,1]]
-// sentence.value = "The guy must pass several trials to see and to take his bride away"; // [[1,0], [3,0], [1,1], [8,0], [6,0], [6,1]]
+sentence.value = "The guy must pass several trials to see and to take his bride away"; // [[1,0], [3,0], [1,1], [8,0], [6,0], [6,1]]
+
+// надо рассмотреть
 // sentence.value = "The fighter seems out of shape"; // [[1,0], [3,0], [4,0], [4,1]]
 // sentence.value = "To know him is to love him"; // [[9,0], [9,1], [11,0], [1,0], [1,1]]
 // sentence.value = "John, Mary and Sam were there"; // [[1,0], [0,0], [6,1], [6,0], [3,0]]
@@ -80,6 +82,9 @@ var tpl = 3; // text padding left
 var tInd = 20; // text indent
 var rule6Union = ''; // союз 6-го правила
 var rule4Prepos = ''; // объект предлога 4-го правила
+var prevNode = {};
+
+prevNode['rule'] = [];
 
 // return text width
 function tw(str) { return graph.measureText(str).width; }
@@ -107,7 +112,19 @@ graph.lineWidth = 1;
 
 function drawNode(node) {
   if ('rule' in node) {
+    if (prevNode.rule[0] == 6 && prevNode.rule[1] == 0 && prevNode.rule[0] != node.rule[0]) {
+      console.log('нарисовано вручную');
+      rule6Draw(prevNode.id, 1, '', prevNode.parentValue, prevNode.hasChild);
+    }
+
     rules[node.rule[0]](node.id, node.rule[1], node.value, node.parentValue, node.childs.length != 0);
+
+    prevNode = {
+      'id': node.id,
+      'rule': node.rule,
+      'parentValue': node.parentValue,
+      'hasChild': node.childs.length != 0,
+    };
   }
 
   for (var i = 0; i < node.childs.length; i++) {
@@ -331,20 +348,36 @@ function rule5Draw(id, subRule, child, parent, hasChild) {
 
 function rule6Draw(id, subRule, child, parent, hasChild) {
   console.log('rule6Draw:', id, subRule, child, parent, hasChild);
+  var parentKey = parent + '_' + (id - 1);
+
   if (subRule) { // subRule == 1
     // дописываем child к подправилу subRule == 0
-    //   ___ child ____
-    //  /              |\
-    // /    rule6Union | \
-    // \               | /
-    //  \___ parent ___|/
+    //    ___ child ____
+    //   /              |\
+    // _/    rule6Union | \_
+    //  \               | /
+    //   \___ parent ___|/
     var mLen = Math.max(tw(rule6Union), tw(child), tw(parent));
     var lw = tInd + mLen + tInd, xt = 0, yt = 0, lh = 25;
 
+    var childKey = child + '_' + id;
+
+    if (parentKey in coords) {
+      x = coords[parentKey].x;
+      y = coords[parentKey].y;
+      graph.moveTo(x, y);
+    }
+
+    graph.lineTo(x += 10, y);
     graph.lineTo(x += lh, y -= deg50(lh));
 
     graph.textAlign = 'center';
     graph.fillText(child, x + lw/2, y - tpb);
+    coords[childKey] = {
+      'x': x + tInd,
+      'y': y,
+      'as': 'child'
+    };
     graph.lineTo(x += lw, y);
 
     xt = x;
@@ -364,6 +397,7 @@ function rule6Draw(id, subRule, child, parent, hasChild) {
     graph.textAlign = 'start'; // ставим выравнивание по-умолчанию
     rule6Union = '';
     graph.moveTo(x, y);
+    graph.lineTo(x += 10, y);
   } else { // subRule == 0
     // запоминаем союз для subRule == 1
     // нужна проверка на существование 1-го подправила

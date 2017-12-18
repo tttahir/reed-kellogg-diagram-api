@@ -1,10 +1,9 @@
 import os
 import spacy
-from spacy.symbols import nsubj, VERB
 import graph
 import sys
 
-nlp = spacy.load("en", vectors=False)
+nlp = spacy.load('en_core_web_sm') 
 
 class rule():
     def get_rule(self):
