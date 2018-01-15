@@ -14,6 +14,7 @@ class rule():
         return self.action_set[rule]
     def draw_rule(self, parent_word, node_word, rule):
         return self.rule_draw[self.get_action(rule)](node_word, parent_word)
+
 class rule_1(rule):
     # main sentence __|_____ rule
     #                 |
@@ -22,6 +23,7 @@ class rule_1(rule):
         self.set_rules = {"nsubj", "nsubjpass", "dobj"}
         self.action_set = {"nsubj":0, "nsubjpass":0, "csubj":0, "csubj":0, "csubjpass":0, "dobj":1}
         self.rule_draw = [lambda child, root : "__"+child+"__|__"+root+"__"+"\n"+" "*(len("__"+child+"__"))+"|", lambda child, root: "__"+root+"__|__"+child+"__"]
+
 class rule_2(rule):
     # complement ___\____ rule
     def __init__(self):
@@ -30,6 +32,7 @@ class rule_2(rule):
         self.action_set = {key:0 for key in self.set_rules}
         self.rule_draw = [lambda child, root: "__"+root+"__\\__"+child+"__"]
         # self.rule_draw = ["___root_node___\\___child_node____"]
+
 class rule_3(rule):
     # modifiers ______ rule
     #               \
@@ -39,6 +42,7 @@ class rule_3(rule):
         self.action_set = {key:0 for key in self.set_rules}
         self.rule_draw = [lambda child, root: "__"+root+"__\n\t\\\n\t \\"+child]
         # self.rule_draw = ["_____root_node____\n\t\t\\\n\t\t \\child_node"]
+
 class rule_4(rule):
     # preposition ________ rule
     #                \
@@ -49,6 +53,7 @@ class rule_4(rule):
         self.action_set = {"agent":0, "pcomp":0, "prep":0, "pobj":1}
         self.rule_draw = [lambda child, root: "__"+root+"__\n\t\\\n\t \\"+child+"\n\t  \\________", lambda child, root: "____\n\t\\\n\t \\"+root+"\n\t  \\__"+child+"__"]
         # self.rule_draw = ["__parent_node___\n\t\\\n\t \\child_node", "_____\n\t\\\n\t \\root_node\n\t  ___child_node__"]
+
 class rule_5(rule):
     # indirect ________ rule
     #                \
@@ -58,6 +63,7 @@ class rule_5(rule):
         self.set_rules = {"iobj"}
         self.action_set = {"iobj":0}
         self.rule_draw = [lambda child, root: "__"+root+"__\n\t\\\n\t \\\n\t  \\__"+child+"__"]
+
 class rule_6(rule):
     # TODO check that conjucted items have childrens nsubj, if that then this is 10 -th rule
     def __init__(self):
@@ -65,6 +71,7 @@ class rule_6(rule):
         self.set_rules = {"cc", "conj"}
         self.action_set = {"cc":0, "conj":1}
         self.rule_draw = [lambda child, root: "_______________" +"\n" + " "*len("_______________")+"|\\\n"  + " "*(len("_______________") - len(" " + child + " "))+ " " + child + " | \\" + "_"+root+"_" + "\n"+ " "*(len("_______________")) +"| /", lambda child, root: "__"+child+"__" +"\n" + " "*len("__"+child+"__")+"|\\\n"  + " "*(len("__"+child+"__"))+"| \\" + "_"+root+"_" + "\n"+ " "*(len("__"+child+"__")) +"| /" ]
+
 class rule_7(rule):
     # TODO check that word do not have in childs to
     def __init__(self):
@@ -72,6 +79,7 @@ class rule_7(rule):
         self.set_rules = {"relcl", "npadvmod", "rcmod", "quantmod", "advcl", "mark"}
         self.action_set = {"relcl":0, "npadvmod":0, "rcmod":0, "quantmod":0, "advcl":0, "mark":1}
         self.rule_draw = [lambda child, root: "__first_sentence_root:_ " + root + "__\n\t|\n\t|\n\t| \n  __second_sentence_root:_" + child + "__", lambda child, root:"__first_sentence_root:_ " + root + "__\n\t|\n\t"+child+"\n\t|"]
+
 class rule_8(rule):
     # TODO somehow check if word have to in childs
     def __init__(self):
@@ -79,12 +87,14 @@ class rule_8(rule):
         self.set_rules = {"relcl_jnj;"}
         self.action_set = {"relcl":0, "npadvmod":0, "rcmod":0, "quantmod":0, "advcl":0, "mark":0}
         self.rule_draw = [lambda child, root: "__first_sentence_root:__" + root + "__\n\t\\\n\t \\to\n\t  \\__second_sentence_root:_" + child + "__"]
+
 class rule_9(rule):
     def __init__(self):
         self.rule_num = 9
         self.set_rules = {"xcomp", "csubj", "ccomp", "csubjpass"}
         self.action_set = {"xcomp":1, "ccomp":1, "csubj":0, "csubjpass":0}
         self.rule_draw = [lambda child, root: " "*(len(" "*8+"_________/\\______|_second_") - len("_first_sentence_root:_"))+"_first_sentence_root:_"+child+"_" +("\n" + " "*len(" "*8+"_________/") + "|")*3 +"\n" +" "*8+"_________/\\______|_second_sentence_root:_" + root + "_",lambda child, root: " "*(len(" "*4+"__|_second_sentence_root:_" + root + "_\\/") - len("_first_sentence_root:_"))+"_first_sentence_root:_"+child+"_" +("\n" + " "*len(" "*4+"__|_second_sentence_root:_" + root + "_\\_/") + "|")*3 +"\n" +" "*4+"__|_second_sentence_root:_" + root + "_\\_/\\"]
+
 class rule_10(rule):
     def __init__(self):
         self.rule_num = 10
@@ -98,9 +108,9 @@ class rule_merge(rule):
         self.rule_num = 11
         self.set_rules = {"aux"}
         self.rule_draw = [lambda child, root: ""]
-
     def get_action(self, rule):
         return 0
+
 class rule_default(rule):
     def __init__(self):
         self.rule_num = 0
@@ -120,6 +130,7 @@ class relations_map():
                 return i, self.rules[i]
     # def complicated_rules
         return -1
+
 def dfs_tree(node):
     if node is None:
         return
@@ -176,6 +187,7 @@ def decide_rule(relation_type, parent, child, all_childs=None):
                     break
     return res
     # return "_".join([str(x) for x in res])
+
 def modify_graph(root, nodes_relation, graph_root, all_childs=None):
     # for relation in nodes_relation:
     child  = nodes_relation[0]#relation[0]
@@ -184,8 +196,8 @@ def modify_graph(root, nodes_relation, graph_root, all_childs=None):
     child_graph_node = graph.GraphNode(text=diagram_relation_type, parent=graph_root, value=child.orth_, raw_relation = relation_type)
     # print("Created child: |", child.orth_+ " " + str(child.i), "| for |", root.orth_ + " " + str(root.i), "|", " relation |", relation_type, "| decided rule: |", diagram_relation_type, "|")
     return child_graph_node
-
     # add child nodes to root, then check if they must be merged - merge
+
 def construct_sent_diagram(sentence):
     root = sentence.root
     # print("TYPE SENTENCE: ", type(sentence))
@@ -275,6 +287,7 @@ def construct_redkillog_graph(text):
         dfs_tree(root)
         roots.append(root)
     return roots
+    
 def draw_tree(node):
     if node is None:
         return

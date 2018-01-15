@@ -2,7 +2,7 @@ import tornado.ioloop
 import tornado.web
 import json
 import os
-from redkillog import parse_sentence
+from reed_kellogg import parse_sentence
 
 
 print('Run server')

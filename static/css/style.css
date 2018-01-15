@@ -143,3 +143,7 @@ line {
 	stroke: #000;
 	stroke-width: 1;
 }
+
+#diagrams img {
+	border: 1px dashed #000;
+}
