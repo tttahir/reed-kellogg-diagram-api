@@ -37,7 +37,7 @@ var sentence = document.getElementById('sentence');
 sentence.value = '';
 
 /* нет примера для 5-го правила */
-sentence.value += "Old as Mary and you. "; // [[4,0], [4,1], [6,0], [6,1]]
+// sentence.value += "Old as Mary and you. "; // [[4,0], [4,1], [6,0], [6,1]]
 // sentence.value += "Hello i'm your daughter. "; // [[0,0], [1,0], [2,0], [3,0]]
 // sentence.value += "Ellen needs help. "; // [[1,0], [1,1]]
 // sentence.value += "Ellen from Mars needs help. "; // [[1,0], [1,1]]
@@ -50,17 +50,17 @@ sentence.value += "Old as Mary and you. "; // [[4,0], [4,1], [6,0], [6,1]]
 // sentence.value += "Jennifer took on the routes from Mars to earn money for camp. "; // [[1,0], [0,0], [1,1], [4,1], [8,0], [4,0]]
 // sentence.value += "The house looks tidy and good, but the yard is a mess and a bad. "; // [[1,0], [3,0], [2,0], [6,1], [6,0], [0,0], [10,0], [10,1]]
 // sentence.value += "The house looks tidy, but the yard is a mess. ";
-sentence.value += "The guy must pass several trials to see and to take his bride away. "; // [[1,0], [3,0], [1,1], [8,0], [6,0], [6,1]]
+// sentence.value += "The guy must pass several trials to see and to take his bride away. "; // [[1,0], [3,0], [1,1], [8,0], [6,0], [6,1]]
 // sentence.value += "The guy must pass several trials to see his bride away. ";
 // sentence.value += "A see his the bride away. ";
 // sentence.value += "John, Mary and Sam were there. "; // [[1,0], [0,0], [6,1], [6,0], [3,0]]
 // sentence.value += "John and Sam were there. "; // [[1,0], [0,0], [6,1], [6,0], [3,0]]
 // sentence.value += "The people who live on this street seem pleasant. "; // [[1,0], [3,0], [7,0], [4,0], [4,1], [0,0]]
 // sentence.value += "We enjoy talking. "; // [[1,0], [11,0]]
-// sentence.value += "My brother and I are getting together for dinner. "; // [[1,0], [3,0], [6,0], [6,1], [11,0], [4,0], [4,1]]
+sentence.value += "My brother and I are getting together for dinner. "; // [[1,0], [3,0], [6,0], [6,1], [11,0], [4,0], [4,1]]
 // sentence.value += "He left early because he felt sick. "; // [[1,0], [3,0], [7,0], [7,1], [2,0]]
-// sentence.value += "We are campers tired but happy. "; // [[1,0], [2,0], [3,0], [6,0], [6,1]]
-// sentence.value += "He can and should finish the job. "; // [[1,0], [11,0], [6,0], [1,1], [3,0]]
+// sentence.value += "We are campers tired but happy. "; // 1 [[1,0], [2,0], [3,0], [6,0], [6,1]]
+sentence.value += "He can and should finish the job. "; // [[1,0], [11,0], [6,0], [1,1], [3,0]]
 // sentence.value += "And a the finish the job. "; // [[1,0], [11,0], [6,0], [1,1], [3,0]]
 // sentence.value += "And finish. "; // [[1,0], [11,0], [6,0], [1,1], [3,0]]
 // sentence.value += "Everyone wondered when would end the play. "; // [[1,0], [1,1], [7,0], [3,0], [11,0]]
@@ -72,18 +72,14 @@ sentence.value += "The guy must pass several trials to see and to take his bride
 // sentence.value += "Tom stopped to take a close look at the car. "; // [[1,0], [9,1], [11,0], [1,1], [3,0], [4,0], [4,1]]
 
 /* сложное предложение */
-// [[3,0], [7,0], [1,0], [2,0], [6,0], [6,1], [0,0], [4,0], [4,1]]
-// sentence.value += "A long time ago the house looked neat and nice, like a new one, but eventually became obsolete. ";
+// 2 [[3,0], [7,0], [1,0], [2,0], [6,0], [6,1], [0,0], [4,0], [4,1]]
+sentence.value += "A long time ago the house looked neat and nice, like a new one, but eventually became obsolete. ";
 
 // [[1,0], [3,0], [4,0], [4,1]] (1)
 // sentence.value += "The fighter seems out of shape. ";
 // sentence.value += "The fighter seems out of of of of of the shape. ";
 // sentence.value += "The fighter seems of the shape. ";
 
-/*
-* Проблемы:
-* после правила 6.0 не следует 6.1 (1) [open]
-*/
 
 var scale = document.getElementById('range');
 var canvas = document.getElementById('draw');
@@ -132,9 +128,11 @@ function right() {
 function copy(obj) {
   var res = {};
   var xt = Object.getOwnPropertyDescriptor(obj, 'x');
+  var yt = Object.getOwnPropertyDescriptor(obj, 'y');
   var rightt = Object.getOwnPropertyDescriptor(obj, 'right');
 
   if (xt) Object.defineProperty(res, 'x', xt);
+  if (yt) Object.defineProperty(res, 'y', yt);
   if (rightt) Object.defineProperty(res, 'right', xt);
 
   for (var key in obj) {
@@ -162,6 +160,7 @@ function drawSents(nodeList) {
     graph.moveTo(x, y);
     nodes = {};
 
+    console.log('<<<<<<<<< Sentence', i, '>>>>>>>>>');
     processTree(nodeList[i]);
     for (var node in nodes) {
       rules[nodes[node].rule].drawNode(nodes[node]);
@@ -177,26 +176,52 @@ function drawSents(nodeList) {
   }
 }
 
+var tempChild = '', tempParent = '';
+
+/*
+Rule1 1 0 brother getting
+Rule6 2 0 and brother
+
+
+Rule1 1 0 He finish
+Rule6 1 0 and finish
+
+
+Rule1 1 0 house looked
+Rule6 1 0 but looked
+Rule6 2 0 and neat
+*/
+
 function processTree(nodeTree) {
   if ('rule' in nodeTree) {
-    if (prevNode.rule[0] == 6 && prevNode.rule[1] == 0 && prevNode.rule[0] != nodeTree.rule[0]) {
-      // console.log('нарисовано вручную');
-      // rule6Draw(prevNode.id, 1, '', prevNode.parentValue, prevNode.hasChild);
+    if (nodeTree.rule.toString() == '1,0') {
+      tempChild = nodeTree.value;
+      tempParent = nodeTree.parent;
     }
 
-    if (prevNode.rule.toString() == '4,0' && nodeTree.rule.toString() == '4,0') {
+    if (nodeTree.rule.toString() == '6,0') {
+      if (tempChild == nodeTree.parent) {
+        // 6 правило было не последнее
+        rules[nodeTree.rule[0]].getData(nodeTree.id, nodeTree.rule[1], nodeTree.value, nodeTree.parent, false);
+      } else if (tempParent == nodeTree.parent) {
+        // 6 правило было последнее
+        rules[nodeTree.rule[0]].getData(nodeTree.id, nodeTree.rule[1], nodeTree.value, nodeTree.parent, true);
+      } else {
+        rules[nodeTree.rule[0]].getData(nodeTree.id, nodeTree.rule[1], nodeTree.value, nodeTree.parent, false);
+      }
+    } else if (prevNode.rule.toString() == '4,0' && nodeTree.rule.toString() == '4,0') {
       console.log('4,0->4,0');
     } else if (prevNode.rule.toString() == '4,0' && nodeTree.rule.toString() == '4,1') {
       console.log('4,0->4,1');
-      rules[nodeTree.rule[0]].getData(nodeTree.id, nodeTree.rule[1], nodeTree.value, nodeTree.parentValue);
+      rules[nodeTree.rule[0]].getData(nodeTree.id, nodeTree.rule[1], nodeTree.value, nodeTree.parent);
     } else {
-      rules[nodeTree.rule[0]].getData(nodeTree.id, nodeTree.rule[1], nodeTree.value, nodeTree.parentValue);
+      rules[nodeTree.rule[0]].getData(nodeTree.id, nodeTree.rule[1], nodeTree.value, nodeTree.parent);
     }
 
     prevNode = {
       'id': nodeTree.id,
       'rule': nodeTree.rule,
-      'parentValue': nodeTree.parentValue
+      'parent': nodeTree.parent
     };
   }
 
@@ -648,7 +673,6 @@ function Rule6() {
         'x': x,
         'y': y,
         'left': tind,
-        'right': x += lw,
         'value': child,
         'rule': 6,
         'subRule': 1,
@@ -656,7 +680,21 @@ function Rule6() {
       };
 
       y += deg50(lh);
-      x += lh + tind;
+      x += lw + lh + tind;
+
+      Object.defineProperty(nodes[childKey], 'right', {
+        configurable: true,
+        get: function() {
+          return Math.max(right.call(this), right.call(nodes[parentKey])) + tind + lh;
+        }
+      });
+
+      Object.defineProperty(nodes[parentKey], 'right', {
+        configurable: true,
+        get: function() {
+          return Math.max(right.call(this), right.call(nodes[childKey])) + tind + lh;
+        }
+      });
     } else { // rule_6_0
       //     _____________
       //    /|            \
@@ -667,22 +705,21 @@ function Rule6() {
 
       if (parentKey in nodes) {
         var tempX = Object.getOwnPropertyDescriptor(nodes[parentKey], 'x').get;
-        var tempRight = Object.getOwnPropertyDescriptor(nodes[parentKey], 'right').get;
 
         nodes[parentKey + '_copy'] = copy(nodes[parentKey]);
         nodes[parentKey + '_copy'].value = '';
 
         if (tempX) {
           Object.defineProperty(nodes[parentKey], 'x', {
+            configurable: true,
             get: function() { return tempX() + tind + lh; }
           });
         } else console.warn(parentKey, 'x is not defined');
 
-        if (tempRight) {
-          Object.defineProperty(nodes[parentKey], 'right', {
-            get: function() { return tempRight.call(this) + tind + lh; }
-          });
-        } else console.warn(parentKey, 'right is not defined');
+        Object.defineProperty(nodes[parentKey], 'right', {
+          configurable: true,
+          get: function() { return right.call(this) + tind + lh; }
+        });
 
         x = nodes[parentKey].x;
         y = nodes[parentKey].y += deg50(lh);

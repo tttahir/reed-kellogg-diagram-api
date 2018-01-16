@@ -330,7 +330,7 @@ def parse_node(node, id):
 
     if isinstance(node.text, rule):
         item['rule'] = [node.text.get_rule(), node.text.get_action(node.raw_relation)]
-        item['parentValue'] = node.parent.value
+        item['parent'] = node.parent.value
         item['id'] = id
 
     item['childs'] = [parse_node(child, id + 1) for child in node.childs]
