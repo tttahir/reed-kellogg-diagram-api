@@ -57,10 +57,10 @@ sentence.value = '';
 // sentence.value += "John and Sam were there. "; // [[1,0], [0,0], [6,1], [6,0], [3,0]]
 // sentence.value += "The people who live on this street seem pleasant. "; // [[1,0], [3,0], [7,0], [4,0], [4,1], [0,0]]
 // sentence.value += "We enjoy talking. "; // [[1,0], [11,0]]
-sentence.value += "My brother and I are getting together for dinner. "; // [[1,0], [3,0], [6,0], [6,1], [11,0], [4,0], [4,1]]
+// sentence.value += "My brother and I are getting together for dinner. "; // [[1,0], [3,0], [6,0], [6,1], [11,0], [4,0], [4,1]]
 // sentence.value += "He left early because he felt sick. "; // [[1,0], [3,0], [7,0], [7,1], [2,0]]
-// sentence.value += "We are campers tired but happy. "; // 1 [[1,0], [2,0], [3,0], [6,0], [6,1]]
-sentence.value += "He can and should finish the job. "; // [[1,0], [11,0], [6,0], [1,1], [3,0]]
+sentence.value += "We are campers tired but happy. "; // 1 [[1,0], [2,0], [3,0], [6,0], [6,1]]
+// sentence.value += "He can and should finish the job. "; // [[1,0], [11,0], [6,0], [1,1], [3,0]]
 // sentence.value += "And a the finish the job. "; // [[1,0], [11,0], [6,0], [1,1], [3,0]]
 // sentence.value += "And finish. "; // [[1,0], [11,0], [6,0], [1,1], [3,0]]
 // sentence.value += "Everyone wondered when would end the play. "; // [[1,0], [1,1], [7,0], [3,0], [11,0]]
@@ -73,7 +73,7 @@ sentence.value += "He can and should finish the job. "; // [[1,0], [11,0], [6,0]
 
 /* сложное предложение */
 // 2 [[3,0], [7,0], [1,0], [2,0], [6,0], [6,1], [0,0], [4,0], [4,1]]
-sentence.value += "A long time ago the house looked neat and nice, like a new one, but eventually became obsolete. ";
+// sentence.value += "A long time ago the house looked neat and nice, like a new one, but eventually became obsolete. ";
 
 // [[1,0], [3,0], [4,0], [4,1]] (1)
 // sentence.value += "The fighter seems out of shape. ";
@@ -178,20 +178,6 @@ function drawSents(nodeList) {
 
 var tempChild = '', tempParent = '';
 
-/*
-Rule1 1 0 brother getting
-Rule6 2 0 and brother
-
-
-Rule1 1 0 He finish
-Rule6 1 0 and finish
-
-
-Rule1 1 0 house looked
-Rule6 1 0 but looked
-Rule6 2 0 and neat
-*/
-
 function processTree(nodeTree) {
   if ('rule' in nodeTree) {
     if (nodeTree.rule.toString() == '1,0') {
@@ -199,17 +185,7 @@ function processTree(nodeTree) {
       tempParent = nodeTree.parent;
     }
 
-    if (nodeTree.rule.toString() == '6,0') {
-      if (tempChild == nodeTree.parent) {
-        // 6 правило было не последнее
-        rules[nodeTree.rule[0]].getData(nodeTree.id, nodeTree.rule[1], nodeTree.value, nodeTree.parent, false);
-      } else if (tempParent == nodeTree.parent) {
-        // 6 правило было последнее
-        rules[nodeTree.rule[0]].getData(nodeTree.id, nodeTree.rule[1], nodeTree.value, nodeTree.parent, true);
-      } else {
-        rules[nodeTree.rule[0]].getData(nodeTree.id, nodeTree.rule[1], nodeTree.value, nodeTree.parent, false);
-      }
-    } else if (prevNode.rule.toString() == '4,0' && nodeTree.rule.toString() == '4,0') {
+    if (prevNode.rule.toString() == '4,0' && nodeTree.rule.toString() == '4,0') {
       console.log('4,0->4,0');
     } else if (prevNode.rule.toString() == '4,0' && nodeTree.rule.toString() == '4,1') {
       console.log('4,0->4,1');
@@ -255,13 +231,11 @@ function Rule1() {
         };
 
         Object.defineProperty(nodes[parentKey], 'right', {
-          configurable: true,
           get: function() { return right.call(this); }
         });
       }
 
       nodes[childKey] = {
-        'y': y,
         'left': tind,
         'value': child,
         'rule': 1,
@@ -276,8 +250,11 @@ function Rule1() {
           configurable: true,
           get: function() { return nodes[parentKey].right; }
         },
-        'right': {
+        'y': {
           configurable: true,
+          get : function() { return nodes[parentKey].y; }
+        },
+        'right': {
           get: function() { return right.call(this); }
         }
       });
@@ -300,7 +277,6 @@ function Rule1() {
       };
 
       Object.defineProperty(nodes[childKey], 'right', {
-        configurable: true,
         get: function() { return right.call(this); }
       });
 
@@ -321,8 +297,11 @@ function Rule1() {
             configurable: true,
             get: function() { return nodes[childKey].right; }
           },
-          'right': {
+          'y': {
             configurable: true,
+            get : function() { return nodes[childKey].y; }
+          },
+          'right': {
             get: function() { return right.call(this); }
           }
         });
@@ -389,7 +368,6 @@ function Rule2() {
       x += tw(parent) + tind*2;
 
       Object.defineProperty(nodes[parentKey], 'right', {
-        configurable: true,
         get: function() { return right.call(this); }
       });
     }
@@ -407,8 +385,11 @@ function Rule2() {
         configurable: true,
         get: function() { return nodes[parentKey].right; }
       },
-      'right': {
+      'y': {
         configurable: true,
+        get : function() { return nodes[parentKey].y; }
+      },
+      'right': {
         get: function() { return right.call(this); }
       }
     });
@@ -434,6 +415,10 @@ function Rule2() {
 
 function Rule3() {
   this.getData = function(id, subRule, child, parent) {
+    // __ parent __
+    //    \
+    //     \ child
+    //      \
     console.log('Rule3', id, subRule, child, parent);
     var parentKey = parent + '_' + (id - 1);
     var childKey = child + '_' + id;
@@ -452,7 +437,6 @@ function Rule3() {
       };
 
       Object.defineProperty(nodes[parentKey], 'right', {
-        configurable: true,
         get: function() { return right.call(this); }
       });
     }
@@ -470,8 +454,10 @@ function Rule3() {
         get: (function() { return nodes[parentKey].x + 30 + this; }).bind(nodes[parentKey].left)
       },
       'y': {
+        configurable: true,
         get : function() { return nodes[parentKey].y + deg50(30); }
-      }
+      },
+      'right': { get: function() { return right.call(this); } }
     });
 
     x += 30; y += deg50(30);
@@ -480,9 +466,9 @@ function Rule3() {
 
   this.drawNode = function(node) {
     // __ parent __
-    //             \
-    //              \ child
-    //               \
+    //    \
+    //     \ child
+    //      \
     if (node.as == 'parent') {
       graph.moveTo(node.x, node.y);
       graph.lineTo(node.right, node.y);
@@ -523,7 +509,6 @@ function Rule4() {
       }
 
       nodes[childKey] = {
-        'y': y += deg50(dlh4),
         'left': tind,
         'value': child,
         'rule': 4,
@@ -531,24 +516,22 @@ function Rule4() {
         'as': 'child'
       };
 
-      x += dlh4
-
       Object.defineProperties(nodes[childKey], {
         'x': {
           configurable: true,
           get: function() { return nodes[parentKey].x + dlh4; }
         },
-        'right': {
+        'y': {
           configurable: true,
-          get: function() { return right.call(this); }
-        }
+          get : function() { return nodes[parentKey].y + deg50(dlh4); }
+        },
+        'right': { get: function() { return right.call(this); } }
       });
 
-      if (childKeyTemp == parentKey) {
-        nodes[parKeyTemp].left += tw(child);
-      }
+      if (childKeyTemp == parentKey) nodes[parKeyTemp].left += tw(child);
 
       parKeyTemp = childKeyTemp = '';
+      x += dlh4; y += deg50(dlh4);
     } else { // rule_4_0
       parentKey = parent + '_' + (id - 1);
       childKey = child + '_pre_' + id;
@@ -568,13 +551,11 @@ function Rule4() {
         };
 
         Object.defineProperty(nodes[parentKey], 'right', {
-          configurable: true,
           get: function() { return right.call(this); }
         });
       }
 
       nodes[childKey] = {
-        'y': y,
         'left': tind,
         'value': child,
         'rule': 4,
@@ -582,9 +563,12 @@ function Rule4() {
         'as': 'child'
       };
 
-      Object.defineProperty(nodes[childKey], 'x', {
-        configurable: true,
-        get: (function() { return nodes[parentKey].x + this; }).bind(nodes[parentKey].left)
+      Object.defineProperties(nodes[childKey], {
+        'x': {
+          configurable: true,
+          get: (function() { return nodes[parentKey].x + this; }).bind(nodes[parentKey].left)
+        },
+        'y': { get : function() { return nodes[parentKey].y; } }
       });
 
       nodes[parentKey].left += Math.max(dlh4/2 + th/2 + tw(child), dlh4 + tind);
@@ -631,8 +615,7 @@ function Rule4() {
 }
 
 function Rule6() {
-  var union = '';
-  var lh = 25, lw = tind*2;
+  var lh = 25;
 
   this.getData = function(id, subRule, child, parent) {
     console.log('Rule6', id, subRule, child, parent);
@@ -641,37 +624,31 @@ function Rule6() {
 
     if (subRule) { // rule_6_1
       //     ___ child ___
-      //    /|            \
-      // __/ |             \__
-      //   \ |             /
-      //    \|__ parent __/
-      var mLen = Math.max(tw(union), tw(child), tw(parent));
-      lw += mLen;
+      //    /|            
+      // __/ |             
+      //   \ |             
+      //    \|__ parent __
 
       if (parentKey in nodes) {
         x = nodes[parentKey].x;
         y = nodes[parentKey].y;
       } else {
-        x += lh + tind;
-        y += deg50(lh);
-
         nodes[parentKey] = {
-          'x': x,
-          'y': y,
+          'x': x += lh + tind,
+          'y': y += deg50(lh),
           'left': tind,
-          'right': x + lw,
           'value': parent,
           'rule': 6,
           'subRule': 1,
           'as': 'parent'
         };
+
+        Object.defineProperty(nodes[parentKey], 'right', {
+          get: function() { return right.call(this); }
+        });
       }
 
-      y -= deg50(lh*2);
-
       nodes[childKey] = {
-        'x': x,
-        'y': y,
         'left': tind,
         'value': child,
         'rule': 6,
@@ -679,32 +656,27 @@ function Rule6() {
         'as': 'child'
       };
 
-      y += deg50(lh);
-      x += lw + lh + tind;
-
-      Object.defineProperty(nodes[childKey], 'right', {
-        configurable: true,
-        get: function() {
-          return Math.max(right.call(this), right.call(nodes[parentKey])) + tind + lh;
-        }
-      });
-
-      Object.defineProperty(nodes[parentKey], 'right', {
-        configurable: true,
-        get: function() {
-          return Math.max(right.call(this), right.call(nodes[childKey])) + tind + lh;
-        }
+      Object.defineProperties(nodes[childKey], {
+        'x': {
+          configurable: true,
+          get: function() { return nodes[parentKey].x; }
+        },
+        'y': {
+          configurable: true,
+          get: function() { return nodes[parentKey].y - deg50(lh*2); }
+        },
+        'right': { get: function() { return right.call(this); } }
       });
     } else { // rule_6_0
       //     _____________
-      //    /|            \
-      // __/ | child       \__
-      //   \ |             /
-      //    \|__ parent __/
-      union = child;
+      //    /|            
+      // __/ | child       
+      //   \ |             
+      //    \|__ parent __
 
       if (parentKey in nodes) {
         var tempX = Object.getOwnPropertyDescriptor(nodes[parentKey], 'x').get;
+        var tempY = Object.getOwnPropertyDescriptor(nodes[parentKey], 'y').get;
 
         nodes[parentKey + '_copy'] = copy(nodes[parentKey]);
         nodes[parentKey + '_copy'].value = '';
@@ -714,25 +686,27 @@ function Rule6() {
             configurable: true,
             get: function() { return tempX() + tind + lh; }
           });
-        } else console.warn(parentKey, 'x is not defined');
+        } else nodes[parentKey].x += tind + lh;
 
-        Object.defineProperty(nodes[parentKey], 'right', {
-          configurable: true,
-          get: function() { return right.call(this) + tind + lh; }
-        });
+        if (tempY) {
+          Object.defineProperty(nodes[parentKey], 'y', {
+            configurable: true,
+            get: function() { return tempY() + deg50(lh); }
+          });
+        } else nodes[parentKey].y += deg50(lh);
 
         x = nodes[parentKey].x;
-        y = nodes[parentKey].y += deg50(lh);
+        y = nodes[parentKey].y;
       } else {
         nodes[parentKey] = {
-          'x': x += lh,
+          'x': x += tind + lh,
           'y': y += deg50(lh),
           'left': tind,
           'value': parent
         };
 
         Object.defineProperty(nodes[parentKey], 'right', {
-          get: function() { return right.call(this) + tind + lh; }
+          get: function() { return right.call(this); }
         });
       }
 
@@ -741,16 +715,16 @@ function Rule6() {
       nodes[parentKey].as = 'parent';
 
       nodes[childKey] = {
-        'x': x,
-        'y': y - deg50(lh),
         'value': child,
         'rule': 6,
         'subRule': 0,
         'as': 'child'
       };
 
-      x += lw + tind + lh;
-      y -= deg50(lh);
+      Object.defineProperties(nodes[childKey], {
+        'x': { get: function() { return nodes[parentKey].x; } },
+        'y': { get: function() { return nodes[parentKey].y - deg50(lh); } },
+      });
     }
   };
 
@@ -759,44 +733,37 @@ function Rule6() {
 
     if (node.subRule) { // rule_6_1
       //     ___ child ___
-      //    /|            \
-      // __/ |             \__
-      //   \ |             /
-      //    \|__ parent __/
+      //    /|            
+      // __/ |             
+      //   \ |             
+      //    \|__ parent __
       if (node.as == 'parent') {
         graph.moveTo(xt, yt);
         graph.lineTo(xt += tind, yt);
         graph.lineTo(xt += lh, yt += deg50(lh));
-        dashedLine(xt, yt, xt, yt - deg50(lh)*2);
-        graph.lineTo(xt = node.right - tind - lh, yt);
+        dashedLine(xt, yt, xt, yt - deg50(lh*2));
+        graph.lineTo(xt = node.right, yt);
         graph.fillText(node.value, node.x + tind, yt - tpb);
-        graph.lineTo(xt += lh, yt -= deg50(lh));
-        graph.lineTo(xt += tind, yt);
-        graph.moveTo(xt -= tind, yt);
-        graph.lineTo(xt -= lh, yt -= deg50(lh));
+        graph.moveTo(xt, yt -= deg50(lh*2));
         graph.lineTo(xt = node.x, yt);
         graph.lineTo(xt -= lh, yt += deg50(lh));
       } else {
         graph.fillText(node.value, node.x + tind, node.y - tpb);
-        lw = tind*2;
       }
     } else { // rule_6_0
       //     _____________
-      //    /|            \
-      // __/ | child       \__
-      //   \ |             /
-      //    \|__ parent __/
+      //    /|            
+      // __/ | child       
+      //   \ |             
+      //    \|__ parent __
       if (node.as == 'parent') {
         graph.moveTo(xt, yt);
         graph.lineTo(xt += tind, yt);
         graph.lineTo(xt += lh, yt += deg50(lh));
-        dashedLine(xt, yt, xt, yt - deg50(lh)*2);
-        graph.lineTo(xt = node.right - tind - lh, yt);
+        dashedLine(xt, yt, xt, yt - deg50(lh*2));
+        graph.lineTo(xt = node.right, yt);
         graph.fillText(node.value, node.x + tind, yt - tpb);
-        graph.lineTo(xt += lh, yt -= deg50(lh));
-        graph.lineTo(xt += tind, yt);
-        graph.moveTo(xt -= tind, yt);
-        graph.lineTo(xt -= lh, yt -= deg50(lh));
+        graph.moveTo(xt, yt -= deg50(lh*2));
         graph.lineTo(xt = node.x, yt);
         graph.lineTo(xt -= lh, yt += deg50(lh));
       } else {
