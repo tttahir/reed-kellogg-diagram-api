@@ -65,7 +65,7 @@ function processSentence() {
 // sentence.value += "My parents saw them at a concert a long time ago. "; // [[1,0], [3,0], [1,1], [4,1], [7,0], [4,0]]
 // sentence.value += "Jennifer took on two paper routes to earn money for camp. "; // [[1,0], [0,0], [1,1], [4,1], [8,0], [4,0]]
 // sentence.value += "Jennifer took on the routes from Mars to earn money for camp. "; // [[1,0], [0,0], [1,1], [4,1], [8,0], [4,0]]
-// sentence.value += "The house looks tidy and good, but the yard is a mess and a bad. "; // [[1,0], [3,0], [2,0], [6,1], [6,0], [0,0], [10,0], [10,1]]
+sentence.value += "The house looks tidy and good, but the yard is a mess and a bad. "; // [[1,0], [3,0], [2,0], [6,1], [6,0], [0,0], [10,0], [10,1]]
 // sentence.value += "The house looks tidy, but the yard is a mess. ";
 // sentence.value += "The guy must pass several trials to see and to take his bride away. "; // [[1,0], [3,0], [1,1], [8,0], [6,0], [6,1]]
 // sentence.value += "The guy must pass several trials to see his bride away. ";
@@ -91,7 +91,7 @@ function processSentence() {
 /* сложное предложение */
 // 2 [[3,0], [7,0], [1,0], [2,0], [6,0], [6,1], [0,0], [4,0], [4,1]]
 // sentence.value += "A long time ago a the house looked neat and nice, like a new one, but eventually became obsolete. ";
-sentence.value += "A long time ago, the house looked neat and pleasant, like a new one, but eventually become obsolete because it was made of wood. ";
+// sentence.value += "A long time ago, the house looked neat and pleasant, like a new one, but eventually become obsolete because it was made of wood. ";
 
 // [[1,0], [3,0], [4,0], [4,1]] (1)
 // sentence.value += "The fighter seems out of shape. ";
@@ -124,7 +124,7 @@ function drawSents(nodeList) {
   for (var i = 0; i < nodeList.length; i++) {
     graph.save();
     graph.clearRect(0, 0, w, h);
-    graph.scale(scale.value, scale.value);
+    // graph.scale(scale.value, scale.value);
     graph.beginPath();
     x = xs; y = ys;
     graph.moveTo(x, y);
