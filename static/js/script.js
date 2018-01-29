@@ -91,7 +91,7 @@ function processSentence() {
 
 /* =========== за 3,0 следует 3,0 =========== */
 // sentence.value = "How many apples does mary has"; // [[1,0], [3,0]->[3,0], [1,1], [6,1]]
-// sentence.value += "How many apples does mary has. "; // [[1,1], [3,0]->[3,0], [1,0]] - 
+sentence.value += "How many apples does mary has. "; // [[1,1], [3,0]->[3,0], [1,0]] - 
 // sentence.value += "The students worked so very hard. "; // [[1,0], [3,0], [3,0], [3,0], [3,0]]
 
 /* 9 правило */
@@ -107,7 +107,7 @@ function processSentence() {
 /* =========== за 4,0 следует 4,0 =========== */
 // sentence.value += "The fighter seems out of a the shape. ";
 // sentence.value += "The fighter seems out of a the shape from Mars. ";
-sentence.value += "The fighter seems out of of of of of a the shape from Mars. ";
+// sentence.value += "The fighter seems out of of of of of a the shape from Mars. ";
 // sentence.value += "The fighter seems of the shape. ";
 
 
@@ -129,8 +129,7 @@ var chid = 0;
 var nlev = 0;
 
 var prevNode = { 'id': 1 }, nodes = {};
-var ckeyTemp = '';
-var pkeyTemp = '';
+var ckeyTemp = '', pkeyTemp = '';
 var leftTemp = 0;
 var from4040 = false;
 

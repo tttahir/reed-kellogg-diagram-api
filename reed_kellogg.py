@@ -3,7 +3,8 @@ import spacy
 import graph
 import sys
 
-nlp = spacy.load('en_core_web_sm') 
+nlp = spacy.load('en_core_web_sm')
+print('Spacy version:', spacy.__version__)
 
 class rule():
     def get_rule(self):
