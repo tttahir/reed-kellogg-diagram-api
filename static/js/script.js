@@ -2,6 +2,7 @@ var sentence = document.getElementById('sentence');
 var scale = document.getElementById('range');
 var canvas = document.getElementById('draw');
 var graph = canvas.getContext('2d');
+var debug = false;
 
 graph.font = '15px Arial';
 graph.strokeStyle = '#000';
@@ -57,7 +58,9 @@ function processSentence() {
 // sentence.value += "The Robert Mueller inquiry into alleged collusion with Russia in the election is one of the most explosive stories in US politics. ";
 // sentence.value += "Leftwing control of the NEC was one of the last pieces to fall into place. ";
 
-sentence.value += "Old as Mary and you. "; // [[4,0], [4,1], [6,0], [6,1]]
+// sentence.value += "Sally ran down the street. "
+// sentence.value += "Cofee is a delicate art preferd over centuries. "
+// sentence.value += "Old as Mary and you. "; // [[4,0], [4,1], [6,0], [6,1]]
 // sentence.value += "Hello i'm your daughter. "; // [[0,0], [1,0], [2,0], [3,0]]
 // sentence.value += "Ellen needs help. "; // [[1,0], [1,1]]
 // sentence.value += "Ellen from Mars needs help. "; // [[1,0], [1,1]]
@@ -102,8 +105,9 @@ sentence.value += "Old as Mary and you. "; // [[4,0], [4,1], [6,0], [6,1]]
 // sentence.value += "A long time ago, the house looked neat and pleasant, like a new one, but eventually become obsolete because it was made of wood. ";
 
 /* =========== за 4,0 следует 4,0 =========== */
-// sentence.value += "The fighter seems out of a the shape from Mars";
-// sentence.value += "The fighter seems out of of of of of the shape. ";
+// sentence.value += "The fighter seems out of a the shape. ";
+// sentence.value += "The fighter seems out of a the shape from Mars. ";
+sentence.value += "The fighter seems out of of of of of a the shape from Mars. ";
 // sentence.value += "The fighter seems of the shape. ";
 
 
@@ -125,6 +129,10 @@ var chid = 0;
 var nlev = 0;
 
 var prevNode = { 'id': 1 }, nodes = {};
+var ckeyTemp = '';
+var pkeyTemp = '';
+var leftTemp = 0;
+var from4040 = false;
 
 
 function drawSents(nodeList) {
@@ -149,10 +157,12 @@ function drawSents(nodeList) {
     correctCoords();
     repaint();
 
-    // var img = new Image();
+    if (debug) {
+      var img = new Image();
 
-    // img.src = canvas.toDataURL();
-    // out.appendChild(img);
+      img.src = canvas.toDataURL();
+      out.appendChild(img);
+    }
   }
 }
 
@@ -165,15 +175,26 @@ function processTree(nodeTree) {
       prevNode.id = nodeTree.id;
       prevNode.value = nodeTree.value;
       prevNode.parent = nodeTree.parent;
+      ckeyTemp = nodeTree.value + '_pre_' + (nodeTree.id - nlev) + '_' + chid;
+      pkeyTemp = nodeTree.parent + '_' + (nodeTree.id - nlev - 1);
+      leftTemp = nodes[pkeyTemp].left;
+      rules[nodeTree.rule[0]].getData(nodeTree.id - nlev, sr, nodeTree.value, nodeTree.parent);
       console.log(prevNode.rule + '->4,0');
     } else if (prevNode.rule == '4,0' && nodeRule == '4,0') {
       prevNode.value += ' ' + nodeTree.value;
       nlev++;
+      from4040 = true;
       console.log('4,0->4,0', prevNode.value);
     } else if (prevNode.rule == '4,0' && nodeRule != '4,0') {
-      rules[4].getData(prevNode.id, 0, prevNode.value, prevNode.parent);
+      if (from4040) {
+        delete nodes[ckeyTemp];
+        nodes[pkeyTemp].left = leftTemp;
+        from4040 = false;
+        rules[4].getData(prevNode.id, 0, prevNode.value, prevNode.parent);
+      }
+
       rules[nodeTree.rule[0]].getData(nodeTree.id - nlev, sr, nodeTree.value, prevNode.value);
-      console.log('4,0->' + nodeRule);
+      console.log('4,0->' + nodeRule, ckeyTemp, pkeyTemp);
     } else {
       if (prevNode.rule != '3,0' && nodeRule == '3,0') {
         console.log(prevNode.rule + '->3,0');
@@ -615,11 +636,11 @@ function Rule4() {
       Object.defineProperties(nodes[ckey], {
         'x': {
           configurable: true,
-          get: function() { return nodes[pkey].x + lh4; }
+          get: function() { return nodes[pkey].x; }
         },
         'y': {
           configurable: true,
-          get : function() { return nodes[pkey].y + deg50(lh4); }
+          get : function() { return nodes[pkey].y; }
         }
       });
 
@@ -642,9 +663,9 @@ function Rule4() {
       Object.defineProperties(nodes[ckey], {
         'x': {
           configurable: true,
-          get: (function() { return nodes[pkey].x + this; }).bind(nodes[pkey].left)
+          get: (function() { return nodes[pkey].x + lh4 + this; }).bind(nodes[pkey].left)
         },
-        'y': { get : function() { return nodes[pkey].y; } }
+        'y': { get : function() { return nodes[pkey].y + deg50(lh4); } }
       });
 
       nodes[pkey].left += Math.max(lh4/2 + th/2 + tw(child), lh4 + tind);
@@ -679,10 +700,10 @@ function Rule4() {
         graph.lineTo(node.right, node.y);
         graph.fillText(node.value, node.x + tind, node.y - tpb);
       } else {
-        graph.moveTo(xt, yt);
-        graph.lineTo(xt += lh4, yt += deg50(lh4));
-        graph.lineTo(xt + tind, yt);
-        graph.fillText(node.value, xt - lh4/2 + th/2, yt - deg50(lh4/2));
+        graph.moveTo(node.x - lh4, node.y - deg50(lh4));
+        graph.lineTo(node.x, node.y);
+        graph.lineTo(node.x + tind, node.y);
+        graph.fillText(node.value, xt - lh4/2 + th/2, node.y - deg50(lh4/2));
       }
     }
   };
