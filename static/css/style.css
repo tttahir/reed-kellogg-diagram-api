@@ -28,17 +28,10 @@ body {
 }
 
 #draw {
-	border: 1px solid #000;
 	vertical-align: middle;
 }
 
-.tab-pad {
-	padding-left: 75px;
-}
-
-.space-pad {
-	padding-left: 8px;
-}
+.border { border: 1px solid #000; }
 
 
 
@@ -132,16 +125,8 @@ body {
 	align-items: flex-end;
 }
 
-svg {
-	border: 1px solid #000;
-	display: block;
-}
-
-line {
-	stroke: #000;
-	stroke-width: 1;
-}
-
 #diagrams img {
-	border: 1px dashed #000;
+	display: block;
+	border: 1px solid #000;
+	margin: 30px auto;
 }

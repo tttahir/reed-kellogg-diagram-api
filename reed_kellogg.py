@@ -304,7 +304,7 @@ def draw_tree(node):
 
     res = [draw_tree(child) for child in node.childs]
 
-text = "Hello i'm your daughter"
+# text = "Hello i'm your daughter"
 # text = "Ellen needs help"
 # text = "She's not as old as Mary"
 # text = "The visitors from El Paso"
@@ -324,6 +324,7 @@ text = "Hello i'm your daughter"
 # text = "We are campers tired but happy."
 # text = "He can and should finish the job."
 # text = "Everyone wondered when would start to play."
+# text = "A long time ago a the house looked neat and nice, like a new one, but eventually became obsolete."
 
 def parse_node(node, id):
     item = { 'value': node.value }
