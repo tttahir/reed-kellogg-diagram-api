@@ -77,8 +77,8 @@ class rule_7(rule):
     # TODO check that word do not have in childs to
     def __init__(self):
         self.rule_num = 7
-        self.set_rules = {"acl", "relcl", "npadvmod", "rcmod", "quantmod", "advcl", "mark"}
-        self.action_set = {"acl":0, "relcl":0, "npadvmod":0, "rcmod":0, "quantmod":0, "advcl":0, "mark":1}
+        self.set_rules = {"relcl", "npadvmod", "rcmod", "quantmod", "advcl", "mark"}
+        self.action_set = {"relcl":0, "npadvmod":0, "rcmod":0, "quantmod":0, "advcl":0, "mark":1}
         self.rule_draw = [lambda child, root: "__first_sentence_root:_ " + root + "__\n\t|\n\t|\n\t| \n  __second_sentence_root:_" + child + "__", lambda child, root:"__first_sentence_root:_ " + root + "__\n\t|\n\t"+child+"\n\t|"]
 
 class rule_8(rule):
@@ -314,7 +314,7 @@ def draw_tree(node):
 # text = "The house looks tidy and good, but the yard is a mess and a bad."
 # text = "Tom stopped to take a close look at the car."
 # text = "The guy must pass several trials to see and to take his bride away."
-# text = "The fighter seems out of shape."
+text = "The fighter seems out of shape."
 # text = "To know him is to love him."
 # text = "John, Mary and Sam were there"
 # text = "You choose a color that you like"
