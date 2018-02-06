@@ -2,8 +2,8 @@ var sentence = document.getElementById('sentence');
 var scale = document.getElementById('range');
 var canvas = document.getElementById('draw');
 var graph = canvas.getContext('2d');
-// var debug = true;
-var debug = false;
+var debug = true;
+// var debug = false;
 
 graph.font = '15px Arial';
 graph.strokeStyle = '#000';
@@ -55,7 +55,7 @@ function processSentence() {
 // sentence.value += "The United States of America, commonly known as the United States or America, is a federal republic composed of 50 states. ";
 // sentence.value += "Cofee is a delicate art preferd over centuries. ";
 // sentence.value += "From Paris with love. "; // [4,0], [4,1]
-sentence.value += "Captain James Cook's last voyage included sailing along the coast of North America and Alaska searching for a Northwest Passage for approximately nine months. "; // [1,0], [3,0], [1,1], [4,0], [4,1], [6,0], [6,1], [7,0]
+// sentence.value += "Captain James Cook's last voyage included sailing along the coast of North America and Alaska searching for a Northwest Passage for approximately nine months. "; // [1,0], [3,0], [1,1], [4,0], [4,1], [6,0], [6,1], [7,0]
 
 /* ======= происходит замена объектов при одинаковом уровне вхождения ======= */
 // 3, 4
@@ -102,7 +102,7 @@ sentence.value += "Captain James Cook's last voyage included sailing along the c
 
 /* =========== сложные предложения =========== */
 // [3,0], [7,0], [1,0], [2,0], [6,0], [6,1], [0,0], [4,0], [4,1]
-// sentence.value += "A long time ago a the house looked neat and nice, like a new one, but eventually became obsolete. ";
+sentence.value += "A long time ago a the house looked neat and nice, like a new one, but eventually became obsolete. ";
 // sentence.value += "A long time ago, the house looked neat and pleasant, like a new one, but eventually become obsolete because it was made of wood. ";
 // sentence.value += "With the progress of European colonization in the territories of the contemporary United States, the Native Americans were often conquered and displaced. "; // [1,0], [3,0], [4,0], [4,1], [6,0], [6,1]
 
@@ -137,7 +137,7 @@ function drawSents(nodeList) {
     parents = 0;
 
     console.log('<<<<<<<<< Sentence', i, '>>>>>>>>>');
-    createParent(nodeList[i]);
+    setParentCoords(nodeList[i]);
     processTree(nodeList[i], currentNode);
 
     if (parents > 1) {
@@ -166,7 +166,7 @@ function drawSents(nodeList) {
   }
 }
 
-function createParent(node) {
+function setParentCoords(node) {
   var r = node.childs[0].rule;
   var sr = node.childs[0].subRule;
   var rule = r + '' + sr;
@@ -194,7 +194,7 @@ function processTree(nodeTree, newTree) {
     var r = nodeTree.childs[i].rule;
     newTree.childs[i] = copy(nodeTree.childs[i]);
     newTree.childs[i].parent = newTree;
-    rules[r].getData(newTree.childs[i], newTree);
+    rules[r - 1].getData(newTree.childs[i], newTree);
     processTree(nodeTree.childs[i], newTree.childs[i]);
   }
 }
@@ -211,12 +211,12 @@ function drawParent(node) {
   graph.font = '15px Arial';
   graph.strokeStyle = '#000';
   graph.lineWidth = 1;
-  rules[node.rule].drawNode(node);
+  rules[node.rule - 1].drawNode(node);
 }
 
 function drawTree(nodeTree) {
   for (var i = 0; i < nodeTree.childs.length; i++) {
-    rules[nodeTree.childs[i].rule].drawNode(nodeTree.childs[i]);
+    rules[nodeTree.childs[i].rule - 1].drawNode(nodeTree.childs[i]);
     drawTree(nodeTree.childs[i]);
   }
 }
@@ -267,7 +267,7 @@ function getRect(node, rect) {
   return rect;
 }
 
-function createChild(node) {
+function setChildCoords(node) {
   var rule = node.rule + '' + node.subRule;
 
   node.left = tind;
@@ -345,23 +345,26 @@ function change7_10(node, rule, srule) {
   }
 }
 
-var rules = [new RuleDefault, new Rule1, new Rule2, new Rule3, new Rule4, new Rule5, new Rule6, new Rule7, new Rule8, new Rule9, new Rule10, new RuleMerge];
+function showLog(child, pval) {
+  var str = [
+  '%cRule(' + child.rule + ':' + child.subRule + ')',
+  '%c' + child.id,
+  '%c' + child.value,
+  '%c' + pval
+  ];
 
-function RuleDefault() {
-  this.getData = function(child, parent) {
-    console.warn('RuleDefault', child.id, child.value, parent.value);
-  };
-
-  this.drawNode = function() {};
+  console.log(str.join(' '), 'color: #79f592', 'color: #8daef6', 'color: #ffd979', 'color: #fff');
 }
+
+var rules = [new Rule1, new Rule2, new Rule3, new Rule4, new Rule5, new Rule6, new Rule7, new Rule8, new Rule9, new Rule7];
 
 function Rule1() {
   this.getData = function(child, parent) {
-    console.log('Rule(1:' + child.subRule + ')', child.id, child.value, parent.value);
+    showLog(child, parent.value);
 
     if (child.subRule) { // Rule(1:1)
       // __ parent __|__ child __
-      createChild(child);
+      setChildCoords(child);
       Object.defineProperties(child, {
         'x': {
           configurable: true,
@@ -376,7 +379,7 @@ function Rule1() {
       // __ child __|__ parent __
       //            |
       change7_10(parent, 1, 0);
-      createChild(child);
+      setChildCoords(child);
       Object.defineProperties(child, {
         'x': {
           configurable: true,
@@ -443,8 +446,8 @@ function Rule2() {
   this.getData = function(child, parent) {
     // ___ parent ___\___ child ____
 
-    console.log('Rule(2)', child.id, child.value, parent.value);
-    createChild(child);
+    showLog(child, parent.value);
+    setChildCoords(child);
     Object.defineProperties(child, {
       'x': {
         configurable: true,
@@ -477,7 +480,7 @@ function Rule2() {
 
 function Rule3() {
   this.getData = function(child, parent) {
-    console.log('Rule(3:' + child.subRule + ')', child.id, child.value, parent.value);
+    showLog(child, parent.value);
 
     if (child.subRule) { // Rule(3:1)
       //  \
@@ -486,7 +489,7 @@ function Rule3() {
       // \
       //  \ child
       //   \
-      createChild(child);
+      setChildCoords(child);
       Object.defineProperties(child, {
         'x': {
           configurable: true,
@@ -503,7 +506,7 @@ function Rule3() {
       //     \ child
       //      \
       change7_10(parent, 3, 0);
-      createChild(child);
+      setChildCoords(child);
       Object.defineProperties(child, {
         'x': {
           configurable: true,
@@ -558,14 +561,14 @@ function Rule3() {
 
 function Rule4() {
   this.getData = function(child, parent) {
-    console.log('Rule(4:' + child.subRule + ')', child.id, child.value, parent.value);
+    showLog(child, parent.value);
 
     if (child.subRule) { // Rule(4:1)
       // \
       //  \ parent
       //   \__ child __
 
-      createChild(child);
+      setChildCoords(child);
       Object.defineProperties(child, {
         'x': {
           configurable: true,
@@ -587,7 +590,7 @@ function Rule4() {
       //     \ child
       //      \__
 
-      createChild(child);
+      setChildCoords(child);
       Object.defineProperties(child, {
         'x': {
           configurable: true,
@@ -639,7 +642,7 @@ function Rule5() {
     //    \
     //     \
     //      \__ child __
-    console.log('Rule(5:' + child.subRule + ')', child.id, child.value, parent.value);
+    showLog(child, parent.value);
   };
 
   this.drawNode = function(node) {
@@ -657,7 +660,7 @@ function Rule5() {
 
 function Rule6() {
   this.getData = function(child, parent) {
-    console.log('Rule(6:' + child.subRule + ')', child.id, child.value, parent.value);
+    showLog(child, parent.value);
 
     var r = parent.rule;
     var sr = parent.subRule;
@@ -694,7 +697,7 @@ function Rule6() {
         parent.as = 'parent';
       }
 
-      createChild(child);
+      setChildCoords(child);
       child.height = deg50(lh6);
 
       Object.defineProperties(child, {
@@ -749,7 +752,7 @@ function Rule6() {
       parent.subRule = 0;
       parent.as = 'parent';
 
-      createChild(child);
+      setChildCoords(child);
       Object.defineProperties(child, {
         'x': { get: function() { return parent.x; } },
         'y': { get: function() { return parent.y - deg50(lh6); } },
@@ -805,14 +808,14 @@ function Rule6() {
 
 function Rule7() {
   this.getData = function(child, parent) {
-    console.log('Rule(' + child.rule + ':' + child.subRule + ')', child.id, child.value, parent.value);
+    showLog(child, parent.value);
 
     if (child.subRule) { // Rule(7:1)
       // __ parent __
       //   |
       //   | child
       //   |
-      createChild(child);
+      setChildCoords(child);
       Object.defineProperties(child, {
         'x': { get: function() { return parent.x + tind/2; } },
         'y': { get: function() { return parent.y - 45; } } // 45 - отступ
@@ -831,7 +834,7 @@ function Rule7() {
         // parent.height = 0;
       }
 
-      createChild(child);
+      setChildCoords(child);
       child.height = Math.abs(ym - parent.y) + lh7;
       Object.defineProperties(child, {
         'x': {
@@ -893,8 +896,8 @@ function Rule8() {
     //    \
     //     \ to
     //      \__ child __
-    console.log('Rule(8)', child.id, child.value, parent.value);
-    createChild(child);
+    showLog(child, parent.value);
+    setChildCoords(child);
     Object.defineProperties(child, {
       'x': {
         configurable: true,
@@ -932,32 +935,62 @@ function Rule8() {
 
 function Rule9() {
   this.getData = function(child, parent) {
-    console.error('Rule(9:' + child.subRule + ')', child.id, child.value, parent.value);
-  };
-
-  this.drawNode = function() {};
-}
-
-function Rule10() {
-  this.getData = function(child, parent) {
-    if (child.subRule) { // Rule(10:1)
-      rules[7].getData(child, parent);
-    } else { // Rule(10:0)
-      rules[7].getData(child, parent);
+    showLog(child, parent.value);
+    if (child.subRule) { // Rule(9:1)
+      //          _love_
+      //            |
+      //            |
+      //            |
+      // __|__is_\_/\
+      setChildCoords(child);
+      Object.defineProperties(child, {
+        'x': { get: function() { return parent.x; } },
+        'y': { get: function() { return parent.y; } }
+      });
+    } else { // Rule(9:0)
+      //     __ To know __
+      //           |
+      //           |
+      //           |
+      // _________/\______|_is_
+      setChildCoords(child);
+      Object.defineProperties(child, {
+        'x': { get: function() { return parent.x; } },
+        'y': { get: function() { return parent.y; } }
+      });
     }
   };
 
   this.drawNode = function(node) {
-    rules[7].drawNode(node);
-  }
-}
-
-function RuleMerge() {
-  this.getData = function(child, parent) {
-    console.warn('RuleMerge', child.id, child.value, parent.value);
+    if (node.subRule) { // Rule(9:1)
+      //               _love_
+      //                 |
+      //                 |
+      //                 |
+      // __|__To know_\_/\
+      if (node.as == 'parent') {
+        graph.moveTo(node.x, node.y);
+        graph.lineTo(node.right, node.y);
+        graph.fillText(node.value, node.x + tind, node.y - tpb);
+      } else {
+        graph.moveTo(node.x, node.y);
+        graph.fillText(node.value, node.x + tind, node.y - tpb);
+      }
+    } else { // Rule(9:0)
+      //        _know_
+      //           |
+      //           |
+      //           |
+      // _________/\______|_is_
+      if (node.as == 'parent') {
+        graph.moveTo(node.x, node.y);
+        graph.fillText(node.value, node.x + tind, node.y - tpb);
+      } else {
+        graph.moveTo(node.x, node.y);
+        graph.fillText(node.value, node.x + tind, node.y - tpb);
+      }
+    }
   };
-
-  this.drawNode = function() {};
 }
 
 
