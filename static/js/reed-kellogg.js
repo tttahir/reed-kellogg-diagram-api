@@ -2,8 +2,8 @@ var sentence = document.getElementById('sentence');
 var scale = document.getElementById('range');
 var canvas = document.getElementById('draw');
 var graph = canvas.getContext('2d');
-var debug = true;
-// var debug = false;
+// var debug = true;
+var debug = false;
 
 graph.font = '15px Arial';
 graph.strokeStyle = '#000';
@@ -961,7 +961,7 @@ function RuleMerge() {
 }
 
 
-/* список исправлений */
+/* список изменений */
 // + удаление лишних пробелов для правильного парсинга предложения
 // + исправлены отрицательные координаты
 // + если за 3 правилом идет 3 правило рисовать их по другому
