@@ -2,8 +2,6 @@ var sentence = document.getElementById('sentence');
 var scale = document.getElementById('range');
 var canvas = document.getElementById('draw');
 var graph = canvas.getContext('2d');
-// var debug = true;
-var debug = false;
 
 graph.font = '15px Arial';
 graph.strokeStyle = '#000';

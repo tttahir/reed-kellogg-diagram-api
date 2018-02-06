@@ -10,7 +10,7 @@ print('Run server')
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        self.render('index.html')
+        self.render('index.html', debug=debug)
 
 class ProcessSentenceHandler(tornado.web.RequestHandler):
     def post(self):
@@ -39,6 +39,7 @@ if __name__ == '__main__':
         protocol = config['server-protocol']
         address = config['server-ip']
         port = config['server-port']
+        debug = config['debug']
         host_url = protocol + address + ':' + port + '/'
         print(host_url)
     except Exception as e:
