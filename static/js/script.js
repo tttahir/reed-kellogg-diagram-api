@@ -2,8 +2,8 @@ var sentence = document.getElementById('sentence');
 var scale = document.getElementById('range');
 var canvas = document.getElementById('draw');
 var graph = canvas.getContext('2d');
-// var debug = true;
-var debug = false;
+var debug = true;
+// var debug = false;
 
 graph.font = '15px Arial';
 graph.strokeStyle = '#000';
@@ -20,7 +20,7 @@ function onEnter(event, callback) {
 function processSentence() {
   var sentence = document.getElementById('sentence').value;
 
-  sentence = sentence.replace(/\s{2,}/g, ' ').trim(); // replace(/\./g, '').
+  sentence = sentence.replace(/\s{2,}/g, ' ').trim();
 
   if (sentence == '') return;
 
@@ -52,7 +52,7 @@ function processSentence() {
 /* ======= нет связи между потомком и родителем ======= */
 // sentence.value += "Little cat, I have no flat. "; // [3,0], [1,0], [1,1], [3,0]
 // sentence.value += "Coffee is a delicate art, perfected over centuries of history and world culture and tastes. ";
-// sentence.value += "The United States of America, commonly known as the United States or America, is a federal republic composed of 50 states. ";
+sentence.value += "The United States of America, commonly known as the United States or America, is a federal republic composed of 50 states. ";
 // sentence.value += "Cofee is a delicate art preferd over centuries. ";
 // sentence.value += "From Paris with love. "; // [4,0], [4,1]
 // sentence.value += "Captain James Cook's last voyage included sailing along the coast of North America and Alaska searching for a Northwest Passage for approximately nine months. "; // [1,0], [3,0], [1,1], [4,0], [4,1], [6,0], [6,1], [7,0]
@@ -71,18 +71,18 @@ function processSentence() {
 // sentence.value += "She's not as old as Mary. "; // [1,0], [3,0], [2,0], [4,0], [4,1]
 // sentence.value += "The visitors from El Paso arrived on schedule. "; // [1,0], [3,0], [0,0], [4,1], [4,0]
 // sentence.value += "The visitors from Mars on schedule. "; // [3,0], [0,0], [4,1], [4,0]
-sentence.value += "Jennifer took on two paper routes to earn money for camp. "; // [1,0], [0,0], [1,1], [4,1], [8,0], [4,0]
+// sentence.value += "Jennifer took on two paper routes to earn money for camp. "; // [1,0], [0,0], [1,1], [4,1], [8,0], [4,0]
 // sentence.value += "Jennifer took on the routes from Mars to earn money for camp. "; // [1,0], [0,0], [1,1], [4,1], [8,0], [4,0]
 // sentence.value += "The house looks tidy and good, but the yard is a mess and a bad. "; // [1,0], [3,0], [2,0], [6,1], [6,0], [0,0], [10,7,0], [10,7,1]
 // sentence.value += "The house looks tidy, but the yard is a mess. "; // [1,0], [3,0], [2,0], [10,7,0], [10,7,1]
-// sentence.value += "The guy must pass several trials to see and to take his bride away. "; // [[1,0], [3,0], [1,1], [8,0], [6,0], [6,1]
-// sentence.value += "The guy must pass several trials to see his bride away. "; // [1,0], [3,0], [1,1], [8,0]
+// sentence.value += "The guy must pass several trials to see and to take his bride away. "; // 4 [1,0], [3,0], [1,1], [8,0], [6,0], [6,1]
+// sentence.value += "The guy must pass several trials to see his bride away. "; // 3 [1,0], [3,0], [1,1], [8,0]
 // sentence.value += "A see his the bride away. "; // [1,0], [1,1], [3,0]
 // sentence.value += "John, Mary and Sam were there. "; // [1,0], [0,0], [6,1], [6,0], [3,0]
 // sentence.value += "John and Sam were there. "; // [1,0], [0,0], [6,1], [6,0], [3,0]
 // sentence.value += "The people who live on this street seem pleasant. "; // [1,0], [3,0], [7,0], [4,0], [4,1], [0,0]
-// sentence.value += "We enjoy talking. "; // [1,0], [11,0]
-// sentence.value += "My brother and I are getting together for dinner. "; // [1,0], [3,0], [6,0], [6,1], [11,0], [4,0], [4,1]
+// sentence.value += "We enjoy talking. "; // 2 [1,0], [11,0]
+// sentence.value += "My brother and I are getting together for dinner. "; // 1 [1,0], [3,0], [6,0], [6,1], [11,0], [4,0], [4,1]
 // sentence.value += "He left early because he felt sick. "; // [1,0], [3,0], [7,0], [7,1], [2,0]
 // sentence.value += "We are campers tired but happy. "; // [1,0], [2,0], [3,0], [6,0], [6,1]
 // sentence.value += "He can and should finish the job. "; // [1,0], [11,0], [6,0], [1,1], [3,0]
@@ -113,8 +113,6 @@ sentence.value += "Jennifer took on two paper routes to earn money for camp. "; 
 // sentence.value += "The fighter seems of the shape. ";
 
 
-var w = canvas.width;
-var h = canvas.height;
 var th = parseInt(graph.font); // text height - (font-size in px)
 var tpb = 7; // text padding bottom
 const x = 20, y = 20 + th + tpb;
@@ -158,13 +156,14 @@ function drawSents(nodeList) {
     } else {
       $('#alert-warning').hide('fast');
     }
-    correctCoords();
+    
 
     graph.save();
-    graph.clearRect(0, 0, w, h);
+    graph.clearRect(0, 0, canvas.width, canvas.height);
     // graph.scale(scale.value, scale.value);
     graph.beginPath();
     graph.moveTo(x, y);
+    correctCoords();
     draw();
 
     if (debug) {
@@ -246,6 +245,24 @@ function draw() {
 
 function correctCoords() {
   var origin = [];
+  var rect = getRect();
+
+  for (var key in nodes) {
+    if (!Object.getOwnPropertyDescriptor(nodes[key], 'x').get) {
+      origin.push(nodes[key]);
+    }
+  }
+  
+  for (var i = 0; i < origin.length; i++) {
+    origin[i].x += x - rect.left;
+    origin[i].y += y - rect.top;
+  }
+
+  canvas.width = rect.right + (x - rect.left) + x; // x как отступ
+  canvas.height = rect.bottom + (y - rect.top) + x;
+}
+
+function getRect() {
   var xmin = x, ymin = y, xmax = x, ymax = y;
 
   for (var key in nodes) {
@@ -272,29 +289,14 @@ function correctCoords() {
     }
 
     xmax = Math.max(xmax, nodes[key].right || nodes[key].x);
-
-    if (!Object.getOwnPropertyDescriptor(nodes[key], 'x').get) {
-      origin.push(nodes[key]);
-    }
-  }
-  
-  for (var i = 0; i < origin.length; i++) {
-    origin[i].x += x - xmin;
-    origin[i].y += y - ymin;
   }
 
-  canvas.width = xmax + (x - xmin) + x; // x как отступ
-  canvas.height = ymax + (y - ymin) + x;
-}
-
-function getMaxY() {
-  var ym = 0;
-
-  for (var key in nodes) {
-    ym = Math.max(ym, nodes[key].y);
-  }
-
-  return ym;
+  return {
+    'top': ymin,
+    'right': xmax,
+    'bottom': ymax,
+    'left': xmin,
+  };
 }
 
 function updateKey(key) {
@@ -313,10 +315,9 @@ function createParent(key, val, r, sr) {
     'as': 'parent'
   };
 
+  if (parents > 1) nodes[key].y = getRect().bottom + 50;
   if (r == 6 && sr == 0) nodes[key].x += tind + lh6;
-
   if (!isNaN(sr)) nodes[key].subRule = sr;
-
   if (r != 4 || sr != 1) {
     Object.defineProperty(nodes[key], 'right', {
       get: function() { return right.call(this); }
@@ -929,7 +930,7 @@ function Rule7() {
       var ym = nodes[pkey].y;
 
       if (nodes[pkey].rule != 6 || nodes[pkey].subRule != 1) {
-        ym = getMaxY();
+        ym = getRect().bottom;
       } else {
         // nodes[pkey].height = 0;
       }

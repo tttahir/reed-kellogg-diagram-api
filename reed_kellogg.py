@@ -123,11 +123,10 @@ class rule_default(rule):
 
 class relations_map():
     def __init__(self):
-        self.rules = [ rule_1(), rule_2(), rule_3(), rule_4(), rule_5(),rule_6(), rule_7(), rule_8(), rule_9(), rule_10(),           rule_merge(),      rule_default()]
+        self.rules = [rule_1(), rule_2(), rule_3(), rule_4(), rule_5(), rule_6(), rule_7(), rule_8(), rule_9(), rule_10(), rule_merge(), rule_default()]
     def find_rule(self, relation, all_childs=None):
         for i in range(len(self.rules)):
             if self.rules[i].in_rule(relation):
-
                 return i, self.rules[i]
     # def complicated_rules
         return -1
@@ -291,30 +290,57 @@ def construct_redkillog_graph(text):
     
 def draw_tree(node):
     if node is None:
+        print('Type node:', type(node), '|text', node.text)
         return
-    # print("Type node: ", type(node))
-    # print('text', node.text)
-    if node.parent is None:
-        pass
-        # print("Node: |", node.value, " | parent: | root | relation: |", node.text, "|")
-    else:
-        print("==========================================================")
-        print('node.raw_relation', node.raw_relation, 'node.text', node.text)
-        print(node.text.draw_rule(node.parent.value, node.value, node.raw_relation))
-        # print('Node: |', node.value, ' | parent: |', node.parent.value, '| relation: ', node.raw_relation)#text.draw_rule(node.parent.value, node.value, node.raw_relation))
 
-    res = [draw_tree(child) for child in node.childs]
+    if node.parent is None:
+        print('node.value:', node.value, '|node.text:', node.text)
+    else:
+        r = node.text.get_rule()
+        raw = node.raw_relation
+        sr = node.text.get_action(raw)
+        if r == 0 or r == 11:
+            if raw != 'punct':
+                vlist = node.parent.value.split(' ')
+                value =  ' '.join(vlist[:-1]) + ' ' + node.value + ' ' + vlist[-1]
+                node.parent.value = value.strip()
+        if isinstance(node.parent.text, rule):
+            pr = node.parent.text.get_rule()
+            psr = node.parent.text.get_action(node.parent.raw_relation)
+            if pr == r == 4 and psr == sr == 0:
+                node.parent.value += ' ' + node.value
+                node.parent.childs = node.childs
+                print('4,0->4,0')
+
+        print('rule:', r, '|raw_relation:', raw, '|value:', node.value, '|parent.value:', node.parent.value)
+        print(node.text.draw_rule(node.parent.value, node.value, raw))
+
+    i = 0
+    while i < len(node.childs):
+        r1 = node.childs[i].text.get_rule()
+        if i + 1 < len(node.childs):
+            if r1 == node.childs[i + 1].text.get_rule() == 10:
+                print('10,1 move to 10,0')
+                node.childs[i].childs.append(node.childs[i + 1])
+                del node.childs[i + 1]
+        draw_tree(node.childs[i])
+        if r1 == 0 or r1 == 11:
+            if len(node.childs[i].childs) > 0:
+                node.childs.extend(node.childs[i].childs)
+            del node.childs[i]
+        else:
+            i += 1
 
 # text = "Hello i'm your daughter"
 # text = "Ellen needs help"
 # text = "She's not as old as Mary"
 # text = "The visitors from El Paso"
 # text = "My parents saw them at a concert a long time ago."
-# text = "Jennifer took on two paper routes to earn money for camp"
-# text = "The house looks tidy and good, but the yard is a mess and a bad."
+# text = "Jennifer took on two paper routes to earn money for camp."
+text = "The house looks tidy, but the yard is a mess."
 # text = "Tom stopped to take a close look at the car."
 # text = "The guy must pass several trials to see and to take his bride away."
-text = "The fighter seems out of shape."
+# text = "The fighter seems out of shape."
 # text = "To know him is to love him."
 # text = "John, Mary and Sam were there"
 # text = "You choose a color that you like"
@@ -324,6 +350,7 @@ text = "The fighter seems out of shape."
 # text = "He left early because he felt sick."
 # text = "We are campers tired but happy."
 # text = "He can and should finish the job."
+# text = "How many apples does mary has."
 # text = "Everyone wondered when would start to play."
 # text = "A long time ago a the house looked neat and nice, like a new one, but eventually became obsolete."
 
@@ -331,24 +358,30 @@ def parse_node(node, id):
     item = { 'value': node.value }
 
     if isinstance(node.text, rule):
-        item['rule'] = [node.text.get_rule(), node.text.get_action(node.raw_relation)]
-        item['parent'] = node.parent.value
+        r = node.text.get_rule()
         item['id'] = id
+        item['rule'] = r
+        item['subRule'] = node.text.get_action(node.raw_relation)
+        if isinstance(node.parent.text, rule):
+            pr = node.parent.text.get_rule()
+            if pr == r == 3:
+                item['subRule'] = 1
 
     item['childs'] = [parse_node(child, id + 1) for child in node.childs]
-    item['childs'].sort(key=lambda item: item['rule'][0])
-
     return item
 
 def parse_sentence(sentence):
     result = []
     id = 0
+    i = 0
     roots = construct_redkillog_graph(sentence)
 
     for node in roots:
+        print('\n==========================================================')
+        print('=========================' , i, '=========================')
         draw_tree(node)
         result.append(parse_node(node, id))
-
+        i += 1
     return result
 
 
