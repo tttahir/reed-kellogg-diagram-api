@@ -36,9 +36,9 @@ function processSentence() {
     }
 
     console.log(this.responseText);
-    var response = JSON.parse(this.responseText);
-    console.log(response);
-    drawSents(response);
+    var result = JSON.parse(this.responseText);
+    console.log(result);
+    drawSents(result);
   };
 
   xhr.open('POST', '/process', true);
@@ -52,10 +52,10 @@ function processSentence() {
 /* ======= нет связи между потомком и родителем ======= */
 // sentence.value += "Little cat, I have no flat. "; // [3,0], [1,0], [1,1], [3,0]
 // sentence.value += "Coffee is a delicate art, perfected over centuries of history and world culture and tastes. ";
-sentence.value += "The United States of America, commonly known as the United States or America, is a federal republic composed of 50 states. ";
+// sentence.value += "The United States of America, commonly known as the United States or America, is a federal republic composed of 50 states. ";
 // sentence.value += "Cofee is a delicate art preferd over centuries. ";
 // sentence.value += "From Paris with love. "; // [4,0], [4,1]
-// sentence.value += "Captain James Cook's last voyage included sailing along the coast of North America and Alaska searching for a Northwest Passage for approximately nine months. "; // [1,0], [3,0], [1,1], [4,0], [4,1], [6,0], [6,1], [7,0]
+sentence.value += "Captain James Cook's last voyage included sailing along the coast of North America and Alaska searching for a Northwest Passage for approximately nine months. "; // [1,0], [3,0], [1,1], [4,0], [4,1], [6,0], [6,1], [7,0]
 
 /* ======= происходит замена объектов при одинаковом уровне вхождения ======= */
 // 3, 4
@@ -75,8 +75,8 @@ sentence.value += "The United States of America, commonly known as the United St
 // sentence.value += "Jennifer took on the routes from Mars to earn money for camp. "; // [1,0], [0,0], [1,1], [4,1], [8,0], [4,0]
 // sentence.value += "The house looks tidy and good, but the yard is a mess and a bad. "; // [1,0], [3,0], [2,0], [6,1], [6,0], [0,0], [10,7,0], [10,7,1]
 // sentence.value += "The house looks tidy, but the yard is a mess. "; // [1,0], [3,0], [2,0], [10,7,0], [10,7,1]
-// sentence.value += "The guy must pass several trials to see and to take his bride away. "; // 4 [1,0], [3,0], [1,1], [8,0], [6,0], [6,1]
-// sentence.value += "The guy must pass several trials to see his bride away. "; // 3 [1,0], [3,0], [1,1], [8,0]
+// sentence.value += "The guy must pass several trials to see and to take his bride away. "; // [1,0], [3,0], [1,1], [8,0], [6,0], [6,1]
+// sentence.value += "The guy must pass several trials to see his bride away. "; // [1,0], [3,0], [1,1], [8,0]
 // sentence.value += "A see his the bride away. "; // [1,0], [1,1], [3,0]
 // sentence.value += "John, Mary and Sam were there. "; // [1,0], [0,0], [6,1], [6,0], [3,0]
 // sentence.value += "John and Sam were there. "; // [1,0], [0,0], [6,1], [6,0], [3,0]
@@ -107,7 +107,7 @@ sentence.value += "The United States of America, commonly known as the United St
 // sentence.value += "With the progress of European colonization in the territories of the contemporary United States, the Native Americans were often conquered and displaced. "; // [1,0], [3,0], [4,0], [4,1], [6,0], [6,1]
 
 /* =========== за 4,0 следует 4,0 =========== */
-// sentence.value += "The fighter seems out of a the shape. ";
+// sentence.value += "The fighter seems out of shape. ";
 // sentence.value += "The fighter seems out of a the shape from Mars. ";
 // sentence.value += "The fighter seems out of of of of of a the shape from Mars. ";
 // sentence.value += "The fighter seems of the shape. ";
@@ -119,21 +119,10 @@ const x = 20, y = 20 + th + tpb;
 var tpl = 3; // text padding left
 var tind = 20; // text indent
 /* длина линии */
-var lh3 = 35; // для 3-го правила
-var lh4 = 50; // для 4-го правила
-var lh6 = 30; // для 6-го правила
-var lh7 = 90; // для 7-го правила
-var lh8 = 50; // для 8-го правила
+var lh1 = 25, lh2 = 16, lh3 = 35, lh4 = 50, lh6 = 30, lh7 = 90, lh8 = 50;
 
-var chid = 0;
-var nlev = 0;
-
-var prevNode = { 'id': 1 }, nodes = {};
-var ckeyTemp = '', pkeyTemp = '';
-var leftTemp = 0;
-var from4040 = false;
+var currentNode = {};
 var parents = 0;
-
 
 function drawSents(nodeList) {
   if (!nodeList.length) return;
@@ -144,199 +133,148 @@ function drawSents(nodeList) {
   canvas.className = 'border';
   
   for (var i = 0; i < nodeList.length; i++) {
-    nodes = {};
-    chid = nlev = parents = 0;
-    ckeyTemp = pkeyTemp = '';
-    prevNode = { 'id': 1 };
+    currentNode = {};
+    parents = 0;
 
     console.log('<<<<<<<<< Sentence', i, '>>>>>>>>>');
-    processTree(nodeList[i]);
+    createParent(nodeList[i]);
+    processTree(nodeList[i], currentNode);
+
     if (parents > 1) {
       $('#alert-warning').show('fast');
     } else {
       $('#alert-warning').hide('fast');
     }
-    
 
     graph.save();
     graph.clearRect(0, 0, canvas.width, canvas.height);
-    // graph.scale(scale.value, scale.value);
     graph.beginPath();
     graph.moveTo(x, y);
-    correctCoords();
-    draw();
+    correctCoords(currentNode);
+    drawParent(currentNode);
+    drawTree(currentNode);
+    graph.stroke();
+    graph.restore();
 
     if (debug) {
       var img = new Image();
       img.src = canvas.toDataURL();
       out.appendChild(img);
     }
+    console.log(nodeList[i]);
+    // console.log(currentNode);
   }
 }
 
-function processTree(nodeTree) {
-  if ('rule' in nodeTree) {
-    var nodeRule = nodeTree.rule.toString();
-    var sr = nodeTree.rule[1];
+function createParent(node) {
+  var r = node.childs[0].rule;
+  var sr = node.childs[0].subRule;
+  var rule = r + '' + sr;
 
-    if (prevNode.rule != '4,0' && nodeRule == '4,0') {
-      prevNode.id = nodeTree.id;
-      prevNode.value = nodeTree.value;
-      prevNode.parent = nodeTree.parent;
-      ckeyTemp = nodeTree.value + '_pre_' + (nodeTree.id - nlev) + '_' + chid;
-      pkeyTemp = nodeTree.parent + '_' + (nodeTree.id - nlev - 1);
-      if (pkeyTemp in nodes) leftTemp = nodes[pkeyTemp].left;
-      rules[nodeTree.rule[0]].getData(nodeTree.id - nlev, sr, nodeTree.value, nodeTree.parent);
-      console.log(prevNode.rule + '->4,0');
-    } else if (prevNode.rule == '4,0' && nodeRule == '4,0') {
-      prevNode.value += ' ' + nodeTree.value;
-      nlev++;
-      from4040 = true;
-      console.log('4,0->4,0', prevNode.value);
-    } else if (prevNode.rule == '4,0' && nodeRule != '4,0') {
-      if (from4040) {
-        console.log('delete:', ckeyTemp);
-        delete nodes[ckeyTemp];
-        if (pkeyTemp in nodes) nodes[pkeyTemp].left = leftTemp;
-        from4040 = false;
-        rules[4].getData(prevNode.id, 0, prevNode.value, prevNode.parent);
-      }
-
-      rules[nodeTree.rule[0]].getData(nodeTree.id - nlev, sr, nodeTree.value, prevNode.value);
-      console.log('4,0->' + nodeRule, ckeyTemp, pkeyTemp);
-    } else {
-      if (prevNode.rule != '3,0' && nodeRule == '3,0') {
-        console.log(prevNode.rule + '->3,0');
-        prevNode.parent = nodeTree.value;
-      } else if (prevNode.rule == '3,0' && nodeRule == '3,0') {
-        if (prevNode.parent == nodeTree.parent) {
-          console.log('3,0->3,1');
-          sr = 1;
-        } else {
-          prevNode.parent = nodeTree.value;
-        }
-      }
-
-      if (prevNode.id > nodeTree.id) nlev = 0;
-
-      rules[nodeTree.rule[0]].getData(nodeTree.id - nlev, sr, nodeTree.value, nodeTree.parent);
-    }
-
-    prevNode.rule = nodeRule;
-  }
-
-  for (var i = 0; i < nodeTree.childs.length; i++) {
-    processTree(nodeTree.childs[i]);
-  }
-}
-
-function draw() {
-  graph.font = '15px Arial';
-  graph.strokeStyle = '#000';
-  graph.lineWidth = 1;
-
-  for (var node in nodes) {
-    rules[nodes[node].rule].drawNode(nodes[node]);
-  }
-
-  graph.stroke();
-  graph.restore();
-}
-
-function correctCoords() {
-  var origin = [];
-  var rect = getRect();
-
-  for (var key in nodes) {
-    if (!Object.getOwnPropertyDescriptor(nodes[key], 'x').get) {
-      origin.push(nodes[key]);
-    }
-  }
-  
-  for (var i = 0; i < origin.length; i++) {
-    origin[i].x += x - rect.left;
-    origin[i].y += y - rect.top;
-  }
-
-  canvas.width = rect.right + (x - rect.left) + x; // x как отступ
-  canvas.height = rect.bottom + (y - rect.top) + x;
-}
-
-function getRect() {
-  var xmin = x, ymin = y, xmax = x, ymax = y;
-
-  for (var key in nodes) {
-    if (nodes[key].rule == 6) {
-      xmin = Math.min(xmin, nodes[key].x - tind - lh6);
-    } else if (nodes[key].rule == 4 && nodes[key].subRule == 1) {
-      xmin = Math.min(xmin, nodes[key].x - lh4);
-    } else {
-      xmin = Math.min(xmin, nodes[key].x);
-    }
-
-    if (nodes[key].rule == 1 && nodes[key].subRule == 0) {
-      ymax = Math.max(ymax, nodes[key].y + 25);
-    } else {
-      ymax = Math.max(ymax, nodes[key].y);
-    }
-
-    if (nodes[key].rule == 4 && nodes[key].subRule == 1) {
-      ymin = Math.min(ymin, nodes[key].y - deg50(lh4));
-    } else if (nodes[key].rule == 6 && nodes[key].subRule == 0 && nodes[key].as == 'child') {
-      ymin = Math.min(ymin, nodes[key].y - deg50(lh6) + th);
-    } else {
-      ymin = Math.min(ymin, nodes[key].y);
-    }
-
-    xmax = Math.max(xmax, nodes[key].right || nodes[key].x);
-  }
-
-  return {
-    'top': ymin,
-    'right': xmax,
-    'bottom': ymax,
-    'left': xmin,
-  };
-}
-
-function updateKey(key) {
-  if (key + '_' + chid in nodes) chid++;
-  return key + '_' + chid;
-}
-
-function createParent(key, val, r, sr) {
-  parents++;
-  nodes[key] = {
+  currentNode = {
     'x': x,
     'y': y,
     'left': tind,
-    'value': val,
+    'value': node.value,
     'rule': r,
-    'as': 'parent'
+    'subRule': sr,
+    'as': 'parent',
+    'childs': []
   };
 
-  if (parents > 1) nodes[key].y = getRect().bottom + 50;
-  if (r == 6 && sr == 0) nodes[key].x += tind + lh6;
-  if (!isNaN(sr)) nodes[key].subRule = sr;
-  if (r != 4 || sr != 1) {
-    Object.defineProperty(nodes[key], 'right', {
+  if (rule != '41') {
+    Object.defineProperty(currentNode, 'right', {
       get: function() { return right.call(this); }
     });
   }
 }
 
-function createChild(key, val, r, sr) {
-  nodes[key] = {
-    'left': tind,
-    'value': val,
-    'rule': r,
-    'as': 'child'
+function processTree(nodeTree, newTree) {
+  for (var i = 0; i < nodeTree.childs.length; i++) {
+    var r = nodeTree.childs[i].rule;
+    newTree.childs[i] = copy(nodeTree.childs[i]);
+    newTree.childs[i].parent = newTree;
+    rules[r].getData(newTree.childs[i], newTree);
+    processTree(nodeTree.childs[i], newTree.childs[i]);
+  }
+}
+
+function correctCoords(node) {
+  var rect = getRect(currentNode);
+  node.x += x - rect.left;
+  node.y += y - rect.top;
+  canvas.width = rect.right + (x - rect.left) + x; // x как отступ
+  canvas.height = rect.bottom + (y - rect.top) + x;
+}
+
+function drawParent(node) {
+  graph.font = '15px Arial';
+  graph.strokeStyle = '#000';
+  graph.lineWidth = 1;
+  rules[node.rule].drawNode(node);
+}
+
+function drawTree(nodeTree) {
+  for (var i = 0; i < nodeTree.childs.length; i++) {
+    rules[nodeTree.childs[i].rule].drawNode(nodeTree.childs[i]);
+    drawTree(nodeTree.childs[i]);
+  }
+}
+
+function getRect(node, rect) {
+  var node = node || { 'childs':[] };
+  var rect = rect || {
+    'top': y,
+    'right': x,
+    'bottom': y,
+    'left': x,
   };
+  var r = node.rule, sr = node.subRule;
+  if ('x' in node) {
+    var xt = node.x, yt = node.y, rt = node.right || node.x;
 
-  if (!isNaN(sr)) nodes[key].subRule = sr;
+    if (r != 9) {
+      if (r == 6) {
+        rect.left = Math.min(rect.left, xt - tind - lh6);
+      } else if (r == 4 && sr == 1) {
+        rect.left = Math.min(rect.left, xt - lh4);
+      } else {
+        rect.left = Math.min(rect.left, xt);
+      }
 
-  if (r != 3 && (r != 4 && r != 6 || sr !=  0) && (r != 7 || sr != 1)) {
-    Object.defineProperty(nodes[key], 'right', {
+      if (r == 1 && sr == 0) {
+        rect.bottom = Math.max(rect.bottom, yt + lh1);
+      } else {
+        rect.bottom = Math.max(rect.bottom, yt);
+      }
+
+      if (r == 4 && sr == 1) {
+        rect.top = Math.min(rect.top, yt - deg50(lh4));
+      } else if (r == 6 && sr == 0 && node.as == 'child') {
+        rect.top = Math.min(rect.top, yt - deg50(lh6) + th);
+      } else {
+        rect.top = Math.min(rect.top, yt);
+      }
+
+      rect.right = Math.max(rect.right, rt);
+    }
+  }
+
+  for (var i = 0; i < node.childs.length; i++) {
+    getRect(node.childs[i], rect);
+  }
+
+  return rect;
+}
+
+function createChild(node) {
+  var rule = node.rule + '' + node.subRule;
+
+  node.left = tind;
+  node.as = 'child';
+
+  if (!/3|40|60|71/.test(rule)) {
+    Object.defineProperty(node, 'right', {
       get: function() { return right.call(this); }
     });
   }
@@ -368,99 +306,98 @@ function right() {
 }
 
 function copy(obj) {
-  var res = {};
+  var res = { 'childs': [] };
   var xt = Object.getOwnPropertyDescriptor(obj, 'x');
   var yt = Object.getOwnPropertyDescriptor(obj, 'y');
-  var rightt = Object.getOwnPropertyDescriptor(obj, 'right');
+  var rt = Object.getOwnPropertyDescriptor(obj, 'right');
 
   if (xt) Object.defineProperty(res, 'x', xt);
   if (yt) Object.defineProperty(res, 'y', yt);
-  if (rightt) Object.defineProperty(res, 'right', xt);
+  if (rt) Object.defineProperty(res, 'right', xt);
 
   for (var key in obj) {
-    res[key] = obj[key];
+    if (key != 'childs') {
+      res[key] = obj[key];
+    }
   }
 
   return res;
 }
 
-function change7(pkey, rule, srule) {
-  if (nodes[pkey].rule == 7) {
-    console.log('7,0 =', rule + ',' + srule);
-    nodes[pkey + '_7'] = copy(nodes[pkey]);
+function change7_10(node, rule, srule) {
+  if (node.rule == 7 || node.rule == 10) {
+    console.log(node.rule + ',' + node.subRule, '=', rule + ',' + srule);
+    node.parent.childs.push(copy(node));
 
-    var xt = Object.getOwnPropertyDescriptor(nodes[pkey], 'x').get;
+    var xt = Object.getOwnPropertyDescriptor(node, 'x').get;
 
     if (xt) {
-      Object.defineProperty(nodes[pkey], 'x', {
+      Object.defineProperty(node, 'x', {
         configurable: true,
         get: function() { return xt() - tind/2; }
       });
     }
 
-    nodes[pkey].rule = rule;
-    nodes[pkey].as = 'parent';
+    node.rule = rule;
+    node.as = 'parent';
 
-    if (!isNaN(srule)) nodes[pkey].subRule = srule;
+    if (!isNaN(srule)) node.subRule = srule;
   }
 }
 
 var rules = [new RuleDefault, new Rule1, new Rule2, new Rule3, new Rule4, new Rule5, new Rule6, new Rule7, new Rule8, new Rule9, new Rule10, new RuleMerge];
 
+function RuleDefault() {
+  this.getData = function(child, parent) {
+    console.warn('RuleDefault', child.id, child.value, parent.value);
+  };
+
+  this.drawNode = function() {};
+}
+
 function Rule1() {
-  this.getData = function(id, subRule, child, parent) {
-    console.log('Rule1', id, subRule, child, parent);
-    var pkey = parent + '_' + (id - 1);
-    var ckey = child + '_' + id;
+  this.getData = function(child, parent) {
+    console.log('Rule(1:' + child.subRule + ')', child.id, child.value, parent.value);
 
-    if (subRule) { // rule_1_1
+    if (child.subRule) { // Rule(1:1)
       // __ parent __|__ child __
-      if (!(pkey in nodes)) createParent(pkey, parent, 1, 1);
-
-      createChild(ckey, child, 1, 1);
-
-      Object.defineProperties(nodes[ckey], {
+      createChild(child);
+      Object.defineProperties(child, {
         'x': {
           configurable: true,
-          get: function() { return nodes[pkey].right; }
+          get: function() { return parent.right; }
         },
         'y': {
           configurable: true,
-          get : function() { return nodes[pkey].y; }
+          get : function() { return parent.y; }
         }
       });
-    } else { // rule_1_0
+    } else { // Rule(1:0)
       // __ child __|__ parent __
       //            |
-      if (pkey in nodes) {
-        change7(pkey, 1, 0);
-      } else {
-        createParent(pkey, parent, 1, 0);
-      }
-
-      createChild(ckey, child, 1, 0);
-
-      Object.defineProperties(nodes[ckey], {
+      change7_10(parent, 1, 0);
+      createChild(child);
+      Object.defineProperties(child, {
         'x': {
           configurable: true,
           get : function() {
             var max = Math.max(this.left + tind, tw(this.value) + tind*2);
 
-            if (nodes[pkey].rule == 6) {
-              return nodes[pkey].x - max - tind - lh6;
+            if (parent.rule == 6) {
+              return parent.x - max - tind - lh6;
             }
 
-            return nodes[pkey].x - max;
+            return parent.x - max;
           }
         },
         'y': {
           configurable: true,
           get : function() {
-            if (nodes[pkey].rule == 6) {
-              return nodes[pkey].y - deg50(lh6);
+            if (parent.rule == 6) {
+              return parent.y - deg50(lh6);
             }
 
-            return nodes[pkey].y;
+            return parent.y;
           }
         }
       });
@@ -468,34 +405,34 @@ function Rule1() {
   };
 
   this.drawNode = function(node) {
-    if (node.subRule) { // rule_1_1
+    if (node.subRule) { // Rule(1:1)
       // __ parent __|__ child __
       if (node.as == 'parent') {
         graph.moveTo(node.x, node.y);
         graph.lineTo(node.right, node.y);
-        graph.moveTo(node.right, node.y - 25);
+        graph.moveTo(node.right, node.y - lh1);
         graph.lineTo(node.right, node.y);
         graph.fillText(node.value, node.x + tind, node.y - tpb);
       } else {
-        graph.moveTo(node.x, node.y - 25);
+        graph.moveTo(node.x, node.y - lh1);
         graph.lineTo(node.x, node.y);
         graph.lineTo(node.right, node.y);
         graph.fillText(node.value, node.x + tind, node.y - tpb);
       }
-    } else { // rule_1_0
+    } else { // Rule(1:0)
       // __ child __|__ parent __
       //            |
       if (node.as == 'parent') {
-        graph.moveTo(node.x, node.y - 25);
-        graph.lineTo(node.x, node.y + 25);
+        graph.moveTo(node.x, node.y - lh1);
+        graph.lineTo(node.x, node.y + lh1);
         graph.moveTo(node.x, node.y);
         graph.lineTo(node.right, node.y);
         graph.fillText(node.value, node.x + tind, node.y - tpb);
       } else {
         graph.moveTo(node.x, node.y);
         graph.lineTo(node.right, node.y);
-        graph.moveTo(node.right, node.y - 25);
-        graph.lineTo(node.right, node.y + 25);
+        graph.moveTo(node.right, node.y - lh1);
+        graph.lineTo(node.right, node.y + lh1);
         graph.fillText(node.value, node.x + tind, node.y - tpb);
       }
     }
@@ -503,25 +440,19 @@ function Rule1() {
 }
 
 function Rule2() {
-  this.getData = function(id, subRule, child, parent) {
+  this.getData = function(child, parent) {
     // ___ parent ___\___ child ____
 
-    console.log('Rule2', id, subRule, child, parent);
-    var pkey = parent + '_' + (id - 1);
-    var ckey = child + '_' + id;
-
-    if (!(pkey in nodes)) createParent(pkey, parent, 2);
-
-    createChild(ckey, child, 2);
-
-    Object.defineProperties(nodes[ckey], {
+    console.log('Rule(2)', child.id, child.value, parent.value);
+    createChild(child);
+    Object.defineProperties(child, {
       'x': {
         configurable: true,
-        get: function() { return nodes[pkey].right; }
+        get: function() { return parent.right; }
       },
       'y': {
         configurable: true,
-        get : function() { return nodes[pkey].y; }
+        get : function() { return parent.y; }
       }
     });
   };
@@ -532,11 +463,11 @@ function Rule2() {
     if (node.as == 'parent') {
       graph.moveTo(node.x, node.y);
       graph.lineTo(node.right, node.y);
-      graph.moveTo(node.right - 16, node.y - deg50(16));
+      graph.moveTo(node.right - lh2, node.y - deg50(lh2));
       graph.lineTo(node.right, node.y);
       graph.fillText(node.value, node.x + tind, node.y - tpb);
     } else {
-      graph.moveTo(node.x - 16, node.y - deg50(16));
+      graph.moveTo(node.x - lh2, node.y - deg50(lh2));
       graph.lineTo(node.x, node.y);
       graph.lineTo(node.right, node.y);
       graph.fillText(node.value, node.x + tind, node.y - tpb);
@@ -545,62 +476,51 @@ function Rule2() {
 }
 
 function Rule3() {
-  this.getData = function(id, subRule, child, parent) {
-    console.log('Rule3', id, subRule, child, parent);
-    var pkey = parent + '_' + (id - 1);
-    var ckey = child + '_' + id;
+  this.getData = function(child, parent) {
+    console.log('Rule(3:' + child.subRule + ')', child.id, child.value, parent.value);
 
-    if (subRule) { // rule_3_1
+    if (child.subRule) { // Rule(3:1)
       //  \
       //  /\ parent
       // /  \
       // \
       //  \ child
       //   \
-      if (!(pkey in nodes)) createParent(pkey, parent, 3, 1);
-
-      createChild(ckey, child, 3, 1);
-
-      Object.defineProperties(nodes[ckey], {
+      createChild(child);
+      Object.defineProperties(child, {
         'x': {
           configurable: true,
-          get: function() { return nodes[pkey].x; }
+          get: function() { return parent.x; }
         },
         'y': {
           configurable: true,
-          get : function() { return nodes[pkey].y + deg50(lh3); }
+          get : function() { return parent.y + deg50(lh3); }
         }
       });
-    } else { // rule_3_0
+    } else { // Rule(3:0)
       // __ parent __
       //    \
       //     \ child
       //      \
-      if (pkey in nodes) {
-        change7(pkey, 3, 0);
-      } else {
-        createParent(pkey, parent, 3, 0);
-      }
-
-      createChild(ckey, child, 3, 0);
-
-      Object.defineProperties(nodes[ckey], {
+      change7_10(parent, 3, 0);
+      createChild(child);
+      Object.defineProperties(child, {
         'x': {
           configurable: true,
-          get: (function() { return nodes[pkey].x + lh3 + this; }).bind(nodes[pkey].left)
+          get: (function() { return parent.x + lh3 + this; }).bind(parent.left)
         },
         'y': {
           configurable: true,
-          get : function() { return nodes[pkey].y + deg50(lh3); }
+          get : function() { return parent.y + deg50(lh3); }
         }
       });
 
-      nodes[pkey].left += tw(child) + lh3/2 + th/2;
+      parent.left += tw(child.value) + lh3/2 + th/2;
     }
   };
 
   this.drawNode = function(node) {
-    if (node.subRule) { // rule_3_1
+    if (node.subRule) { // Rule(3:1)
       //  \
       //  /\ parent
       // /  \
@@ -618,7 +538,7 @@ function Rule3() {
         graph.lineTo(xt += lh3/2, yt -= deg50(lh3/2));
         graph.fillText(node.value, node.x - lh3/2 + th/2, node.y - deg50(lh3/2));
       }
-    } else { // rule_3_0
+    } else { // Rule(3:0)
       // __ parent __
       //    \
       //     \ child
@@ -637,68 +557,51 @@ function Rule3() {
 }
 
 function Rule4() {
-  var parKeyTemp = '', childKeyTemp = '';
+  this.getData = function(child, parent) {
+    console.log('Rule(4:' + child.subRule + ')', child.id, child.value, parent.value);
 
-  this.getData = function(id, subRule, child, parent) {
-    console.log('Rule4', id, subRule, child, parent);
-    var pkey = '', ckey = '';
-
-    if (subRule) { // rule_4_1
+    if (child.subRule) { // Rule(4:1)
       // \
       //  \ parent
       //   \__ child __
-      pkey = parent + '_pre_' + (id - 1) + '_' + chid;
-      ckey = child + '_' + id;
 
-      if (!(pkey in nodes)) createParent(pkey, parent, 4, 1);
-
-      createChild(ckey, child, 4, 1);
-
-      Object.defineProperties(nodes[ckey], {
+      createChild(child);
+      Object.defineProperties(child, {
         'x': {
           configurable: true,
-          get: function() { return nodes[pkey].x; }
+          get: function() { return parent.x; }
         },
         'y': {
           configurable: true,
-          get : function() { return nodes[pkey].y; }
+          get : function() { return parent.y; }
         }
       });
 
-      if (childKeyTemp == pkey) {
-        nodes[parKeyTemp].left -= Math.max(lh4/2 + th/2 + tw(parent), lh4 + tind);
-        nodes[parKeyTemp].left += Math.max(lh4/2 + th/2 + tw(parent), lh4 + tind + tw(child));
+      if ('parent' in parent) {
+        parent.parent.left -= Math.max(lh4/2 + th/2 + tw(parent.value), lh4 + tind);
+        parent.parent.left += Math.max(lh4/2 + th/2 + tw(parent.value), lh4 + tind + tw(child.value));
       }
-
-      parKeyTemp = childKeyTemp = '';
-    } else { // rule_4_0
+    } else { // Rule(4:0)
       // __ parent __
       //    \
       //     \ child
       //      \__
-      pkey = parent + '_' + (id - 1);
-      ckey = updateKey(child + '_pre_' + id);
 
-      if (!(pkey in nodes)) createParent(pkey, parent, 4, 0);
-
-      createChild(ckey, child, 4, 0);
-
-      Object.defineProperties(nodes[ckey], {
+      createChild(child);
+      Object.defineProperties(child, {
         'x': {
           configurable: true,
-          get: (function() { return nodes[pkey].x + lh4 + this; }).bind(nodes[pkey].left)
+          get: (function() { return parent.x + lh4 + this; }).bind(parent.left)
         },
-        'y': { get : function() { return nodes[pkey].y + deg50(lh4); } }
+        'y': { get : function() { return parent.y + deg50(lh4); } }
       });
 
-      nodes[pkey].left += Math.max(lh4/2 + th/2 + tw(child), lh4 + tind);
-      parKeyTemp = pkey;
-      childKeyTemp = ckey;
+      parent.left += Math.max(lh4/2 + th/2 + tw(child.value), lh4 + tind);
     }
   };
 
   this.drawNode = function(node) {
-    if (node.subRule) { // rule_4_1
+    if (node.subRule) { // Rule(4:1)
       // \
       //  \ parent
       //   \__ child __
@@ -711,7 +614,7 @@ function Rule4() {
         graph.lineTo(node.right, node.y);
         graph.fillText(node.value, node.x + tind, node.y - tpb);
       }
-    } else { // rule_4_0
+    } else { // Rule(4:0)
       // __ parent __
       //    \
       //     \ child
@@ -730,117 +633,126 @@ function Rule4() {
   };
 }
 
+function Rule5() {
+  this.getData = function(child, parent) {
+    // __ parent __
+    //    \
+    //     \
+    //      \__ child __
+    console.log('Rule(5:' + child.subRule + ')', child.id, child.value, parent.value);
+  };
+
+  this.drawNode = function(node) {
+    // __ parent __
+    //    \
+    //     \
+    //      \__ child __
+    // graph.fillText(parent, x + tind, y - tpb);
+    // graph.lineTo(x += tind + tw(parent) + tind, y);
+    // graph.lineTo(x += 30, y += deg50(30));
+    // graph.fillText(child, x + tind, y - tpb);
+    // graph.lineTo(x += tind + tw(child) + tind, y);
+  };
+}
+
 function Rule6() {
-  this.getData = function(id, subRule, child, parent) {
-    console.log('Rule6', id, subRule, child, parent);
-    var pkey = parent + '_' + (id - 1);
-    var ckey = child + '_' + id;
+  this.getData = function(child, parent) {
+    console.log('Rule(6:' + child.subRule + ')', child.id, child.value, parent.value);
 
-    if (pkey in nodes) {
-      var r = nodes[pkey].rule;
-      var sr = nodes[pkey].subRule;
-      var as = nodes[pkey].as;
-    }
+    var r = parent.rule;
+    var sr = parent.subRule;
 
-    if (subRule) { // rule_6_1
+    if (child.subRule) { // Rule(6:1)
       //     ___ child ___
       //    /|            
       // __/ |             
       //   \ |             
       //    \|__ parent __
 
-      if (pkey in nodes) {
-        if (r != 6) {
-          if (r != 1 || sr != 0) {
-            var tempX61 = Object.getOwnPropertyDescriptor(nodes[pkey], 'x').get;
-            var tempY61 = Object.getOwnPropertyDescriptor(nodes[pkey], 'y').get;
+      if (r != 6) {
+        if (r != 1 || sr != 0) {
+          var tempX61 = Object.getOwnPropertyDescriptor(parent, 'x').get;
+          var tempY61 = Object.getOwnPropertyDescriptor(parent, 'y').get;
 
-            if (tempX61) {
-              Object.defineProperty(nodes[pkey], 'x', {
-                configurable: true,
-                get: function() { return tempX61.call(this) + tind + lh6; }
-              });
-            } else nodes[pkey].x += tind + lh6;
+          if (tempX61) {
+            Object.defineProperty(parent, 'x', {
+              configurable: true,
+              get: function() { return tempX61.call(this) + tind + lh6; }
+            });
+          } else parent.x += tind + lh6;
 
-            if (tempY61) {
-              Object.defineProperty(nodes[pkey], 'y', {
-                configurable: true,
-                get: function() { return tempY61() + deg50(lh6); }
-              });
-            } else nodes[pkey].y += deg50(lh6);
-          }
-
-          nodes[pkey].rule = 6;
-          nodes[pkey].subRule = 1;
-          nodes[pkey].as = 'parent';
+          if (tempY61) {
+            Object.defineProperty(parent, 'y', {
+              configurable: true,
+              get: function() { return tempY61() + deg50(lh6); }
+            });
+          } else parent.y += deg50(lh6);
         }
-      } else {
-        createParent(pkey, parent, 6, 1);
+
+        parent.rule = 6;
+        parent.subRule = 1;
+        parent.as = 'parent';
       }
 
-      createChild(ckey, child, 6, 1);
-      nodes[ckey].height = deg50(lh6);
+      createChild(child);
+      child.height = deg50(lh6);
 
-      Object.defineProperties(nodes[ckey], {
+      Object.defineProperties(child, {
         'x': {
           configurable: true,
-          get: function() { return nodes[pkey].x; }
+          get: function() { return parent.x; }
         },
         'y': {
           configurable: true,
-          get: function() { return nodes[pkey].y - deg50(lh6*2); }
+          get: function() { return parent.y - deg50(lh6*2); }
         }
       });
-    } else { // rule_6_0
+    } else { // Rule(6:0)
       //     
       //    /|            
       // __/ | child       
       //   \ |             
       //    \|__ parent __
 
-      if (pkey in nodes) {
-        if ((r == 3 || r == 8) && as == 'child') {
-          nodes[pkey + '_copy'] = copy(nodes[pkey]);
-          nodes[pkey + '_copy'].value = '';
-        }
-
-        if (r != 1 || sr != 0) {
-          var tempX60 = Object.getOwnPropertyDescriptor(nodes[pkey], 'x').get;
-          var tempY60 = Object.getOwnPropertyDescriptor(nodes[pkey], 'y').get;
-
-          if (tempX60) {
-            Object.defineProperty(nodes[pkey], 'x', {
-              configurable: true,
-              get: function() { return tempX60.call(this) + tind + lh6; }
-            });
-          } else nodes[pkey].x += tind + lh6;
-
-          if (tempY60) {
-            Object.defineProperty(nodes[pkey], 'y', {
-              configurable: true,
-              get: function() { return tempY60() + deg50(lh6); }
-            });
-          } else nodes[pkey].y += deg50(lh6);
-
-          if (!Object.getOwnPropertyDescriptor(nodes[pkey], 'right')) {
-            Object.defineProperty(nodes[pkey], 'right', {
-              get: function() { return right.call(this); }
-            });
-          }
-        }
-      } else {
-        createParent(pkey, parent, 6, 0);
+      if ((r == 3 || r == 8) && parent.as == 'child') {
+        var copy38 = copy(parent);
+        copy38.value = '';
+        parent.parent.childs.push(copy38);
       }
 
-      nodes[pkey].rule = 6;
-      nodes[pkey].subRule = 0;
-      nodes[pkey].as = 'parent';
+      if (r != 1 || sr != 0) {
+        var tempX60 = Object.getOwnPropertyDescriptor(parent, 'x').get;
+        var tempY60 = Object.getOwnPropertyDescriptor(parent, 'y').get;
 
-      createChild(ckey, child, 6, 0);
+        if (tempX60) {
+          Object.defineProperty(parent, 'x', {
+            configurable: true,
+            get: function() { return tempX60.call(this) + tind + lh6; }
+          });
+        } else parent.x += tind + lh6;
 
-      Object.defineProperties(nodes[ckey], {
-        'x': { get: function() { return nodes[pkey].x; } },
-        'y': { get: function() { return nodes[pkey].y - deg50(lh6); } },
+        if (tempY60) {
+          Object.defineProperty(parent, 'y', {
+            configurable: true,
+            get: function() { return tempY60() + deg50(lh6); }
+          });
+        } else parent.y += deg50(lh6);
+
+        if (!Object.getOwnPropertyDescriptor(parent, 'right')) {
+          Object.defineProperty(parent, 'right', {
+            get: function() { return right.call(this); }
+          });
+        }
+      }
+
+      parent.rule = 6;
+      parent.subRule = 0;
+      parent.as = 'parent';
+
+      createChild(child);
+      Object.defineProperties(child, {
+        'x': { get: function() { return parent.x; } },
+        'y': { get: function() { return parent.y - deg50(lh6); } },
       });
     }
   };
@@ -848,7 +760,7 @@ function Rule6() {
   this.drawNode = function(node) {
     var xt = node.x - lh6 - tind, yt = node.y - deg50(lh6);
 
-    if (node.subRule) { // rule_6_1
+    if (node.subRule) { // Rule(6:1)
       //     ___ child ___
       //    /|            
       // __/ |             
@@ -868,13 +780,8 @@ function Rule6() {
         graph.lineTo(node.x, node.y);
         graph.lineTo(node.right, node.y);
         graph.fillText(node.value, node.x + tind, node.y - tpb);
-
-        // graph.moveTo(xt += tind, node.y + deg50(lh6));
-        // graph.lineTo(xt += lh6, node.y);
-        // graph.lineTo(node.right, node.y);
-        // graph.fillText(node.value, node.x + tind, node.y - tpb);
       }
-    } else { // rule_6_0
+    } else { // Rule(6:0)
       //     
       //    /|            
       // __/ | child       
@@ -897,68 +804,55 @@ function Rule6() {
 }
 
 function Rule7() {
-  this.getData = function(id, subRule, child, parent) {
-    console.log('Rule7', id, subRule, child, parent);
-    var pkey = parent + '_' + (id - 1);
-    var ckey = child + '_' + id;
+  this.getData = function(child, parent) {
+    console.log('Rule(' + child.rule + ':' + child.subRule + ')', child.id, child.value, parent.value);
 
-    if (subRule) { // rule_7_1
+    if (child.subRule) { // Rule(7:1)
       // __ parent __
       //   |
       //   | child
       //   |
-      pkey = parent + '_' + (id - 1);
-
-      if (!(pkey in nodes)) createParent(pkey, parent, 7, 1);
-
-      createChild(ckey, child, 7, 1);
-
-      Object.defineProperties(nodes[ckey], {
-        'x': { get: function() { return nodes[pkey].x + tind/2; } },
-        'y': { get: function() { return nodes[pkey].y - 45; } }
+      createChild(child);
+      Object.defineProperties(child, {
+        'x': { get: function() { return parent.x + tind/2; } },
+        'y': { get: function() { return parent.y - 45; } } // 45 - отступ
       });
-    } else { // rule_7_0
+    } else { // Rule(7:0)
       // __ parent __
       //   |
       //   |
       //   |
       // __ child __
-      ckey = child + '_' + id;
+      var ym = parent.y;
 
-      if (!(pkey in nodes)) createParent(pkey, parent, 7, 0);
-
-      var ym = nodes[pkey].y;
-
-      if (nodes[pkey].rule != 6 || nodes[pkey].subRule != 1) {
-        ym = getRect().bottom;
+      if (parent.rule != 6 || parent.subRule != 1) {
+        ym = getRect(currentNode).bottom;
       } else {
-        // nodes[pkey].height = 0;
+        // parent.height = 0;
       }
 
-      createChild(ckey, child, 7, 0);
-      nodes[ckey].height = Math.abs(ym - nodes[pkey].y) + lh7;
-
-      Object.defineProperties(nodes[ckey], {
+      createChild(child);
+      child.height = Math.abs(ym - parent.y) + lh7;
+      Object.defineProperties(child, {
         'x': {
           configurable: true,
           get: function() {
-            if (nodes[pkey].rule == 1 || nodes[pkey].rule == 6) {
-              return nodes[pkey].x + tind/2;
+            if (parent.rule == 1 || parent.rule == 6) {
+              return parent.x + tind/2;
             }
-
-            return nodes[pkey].x;
+            return parent.x;
           }
         },
         'y': {
           configurable: true,
-          get: function() { return nodes[pkey].y + nodes[ckey].height; }
+          get: function() { return parent.y + child.height; }
         }
       });
     }
   };
 
   this.drawNode = function(node) {
-    if (node.subRule) { // rule_7_1
+    if (node.subRule) { // Rule(7:1)
       //   |
       //   | child
       //   |
@@ -972,7 +866,7 @@ function Rule7() {
         dashedLine(node.x, node.y + 45, node.x, node.y - th*2);
         graph.fillText(node.value, node.x + 7, node.y);
       }
-    } else { // rule_7_0
+    } else { // Rule(7:0)
       // __ parent __
       //   |
       //   |
@@ -994,31 +888,25 @@ function Rule7() {
 }
 
 function Rule8() {
-  this.getData = function(id, subRule, child, parent) {
+  this.getData = function(child, parent) {
     // __ parent __
     //    \
     //     \ to
     //      \__ child __
-    console.log('Rule8', id, subRule, child, parent);
-    var pkey = parent + '_' + (id - 1);
-    var ckey = child + '_' + id;
-    
-    if (!(pkey in nodes)) createParent(pkey, parent, 8);
-
-    createChild(ckey, child, 8);
-
-    Object.defineProperties(nodes[ckey], {
+    console.log('Rule(8)', child.id, child.value, parent.value);
+    createChild(child);
+    Object.defineProperties(child, {
       'x': {
         configurable: true,
-        get: (function() { return nodes[pkey].x + lh8 + this; }).bind(nodes[pkey].left)
+        get: (function() { return parent.x + lh8 + this; }).bind(parent.left)
       },
       'y': {
         configurable: true,
-        get: function() { return nodes[pkey].y + deg50(lh8); }
+        get: function() { return parent.y + deg50(lh8); }
       }
     });
 
-    nodes[pkey].left += lh8 + tw(child) + tind;
+    parent.left += lh8 + tw(child.value) + tind;
   };
 
   this.drawNode = function(node) {
@@ -1043,26 +931,20 @@ function Rule8() {
 }
 
 function Rule9() {
-  this.getData = function(id, subRule, child, parent) {
-    console.log('Rule9', id, subRule, child, parent);
-    console.error('Rule9 is not defined');
+  this.getData = function(child, parent) {
+    console.error('Rule(9:' + child.subRule + ')', child.id, child.value, parent.value);
   };
 
   this.drawNode = function() {};
 }
 
 function Rule10() {
-  var child10 = '';
-
-  this.getData = function(id, subRule, child, parent) {
-    if (subRule) { // rule_10_1
-      rules[7].getData(id + 1, subRule, child, child10);
-    } else { // rule_10_0
-      rules[7].getData(id, subRule, child, parent);
-      child10 = child;
+  this.getData = function(child, parent) {
+    if (child.subRule) { // Rule(10:1)
+      rules[7].getData(child, parent);
+    } else { // Rule(10:0)
+      rules[7].getData(child, parent);
     }
-
-    console.log('Rule10 --^');
   };
 
   this.drawNode = function(node) {
@@ -1070,40 +952,14 @@ function Rule10() {
   }
 }
 
-
-function RuleDefault() {
-  this.getData = function(id, subRule, child, parent) {
-    console.log('RuleDefault', id, subRule, child, parent);
-  };
-
-  this.drawNode = function() {};
-}
-
-function Rule5() {
-  this.getData = function(id, subRule, child, parent) {
-    console.log('Rule5', id, subRule, child, parent);
-  };
-
-  this.drawNode = function(node) {
-    // __ parent __
-    //             \
-    //              \
-    //               \__ child __
-    graph.fillText(parent, x + tind, y - tpb);
-    graph.lineTo(x += tind + tw(parent) + tind, y);
-    graph.lineTo(x += 30, y += deg50(30));
-    graph.fillText(child, x + tind, y - tpb);
-    graph.lineTo(x += tind + tw(child) + tind, y);
-  };
-}
-
 function RuleMerge() {
-  this.getData = function(id, subRule, child, parent) {
-    console.log('RuleMerge', id, subRule, child, parent);
+  this.getData = function(child, parent) {
+    console.warn('RuleMerge', child.id, child.value, parent.value);
   };
 
   this.drawNode = function() {};
 }
+
 
 /* список исправлений */
 // + удаление лишних пробелов для правильного парсинга предложения
@@ -1111,5 +967,5 @@ function RuleMerge() {
 // + если за 3 правилом идет 3 правило рисовать их по другому
 // + оптимальная высота для пунктирной линии 7го правила
 // + там где нет связи выводить сообщение
-// - разобратся с RuleDefault
-// - происходит замена объектов при одинаковом уровне вхождения
+// + исправлена замена объектов при одинаковом уровне вхождения
+// + RuleDefault и RuleMerge прибавляются к родителю
