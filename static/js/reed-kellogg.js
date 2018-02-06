@@ -2,8 +2,8 @@ var sentence = document.getElementById('sentence');
 var scale = document.getElementById('range');
 var canvas = document.getElementById('draw');
 var graph = canvas.getContext('2d');
-var debug = true;
-// var debug = false;
+// var debug = true;
+var debug = false;
 
 graph.font = '15px Arial';
 graph.strokeStyle = '#000';
@@ -55,7 +55,7 @@ function processSentence() {
 // sentence.value += "The United States of America, commonly known as the United States or America, is a federal republic composed of 50 states. ";
 // sentence.value += "Cofee is a delicate art preferd over centuries. ";
 // sentence.value += "From Paris with love. "; // [4,0], [4,1]
-// sentence.value += "Captain James Cook's last voyage included sailing along the coast of North America and Alaska searching for a Northwest Passage for approximately nine months. "; // [1,0], [3,0], [1,1], [4,0], [4,1], [6,0], [6,1], [7,0]
+sentence.value += "Captain James Cook's last voyage included sailing along the coast of North America and Alaska searching for a Northwest Passage for approximately nine months. "; // [1,0], [3,0], [1,1], [4,0], [4,1], [6,0], [6,1], [7,0]
 
 /* ======= происходит замена объектов при одинаковом уровне вхождения ======= */
 // 3, 4
@@ -102,7 +102,7 @@ function processSentence() {
 
 /* =========== сложные предложения =========== */
 // [3,0], [7,0], [1,0], [2,0], [6,0], [6,1], [0,0], [4,0], [4,1]
-sentence.value += "A long time ago a the house looked neat and nice, like a new one, but eventually became obsolete. ";
+// sentence.value += "A long time ago a the house looked neat and nice, like a new one, but eventually became obsolete. ";
 // sentence.value += "A long time ago, the house looked neat and pleasant, like a new one, but eventually become obsolete because it was made of wood. ";
 // sentence.value += "With the progress of European colonization in the territories of the contemporary United States, the Native Americans were often conquered and displaced. "; // [1,0], [3,0], [4,0], [4,1], [6,0], [6,1]
 
