@@ -16,7 +16,7 @@ class ProcessSentenceHandler(tornado.web.RequestHandler):
     def post(self):
         sentence = self.get_argument('sentence', '')
         sent_list = parse_sentence(sentence)
-        response = json.dumps(sent_list)
+        response = json.dumps(sent_list, skipkeys=False)
 
         print(response)
         self.write(response)

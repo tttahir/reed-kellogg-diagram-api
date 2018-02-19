@@ -287,49 +287,23 @@ def construct_redkillog_graph(text):
         dfs_tree(root)
         roots.append(root)
     return roots
-    
+
 def draw_tree(node):
     if node is None:
-        print('Type node:', type(node), '|text', node.text)
         return
-
+    # print("Type node: ", type(node))
+    # print('text', node.text)
     if node.parent is None:
-        print('node.value:', node.value, '|node.text:', node.text)
+        pass
+        # print("Node: |", node.value, " | parent: | root | relation: |", node.text, "|")
     else:
-        r = node.text.get_rule()
-        raw = node.raw_relation
-        sr = node.text.get_action(raw)
-        if r == 0 or r == 11:
-            if raw != 'punct':
-                vlist = node.parent.value.split(' ')
-                value =  ' '.join(vlist[:-1]) + ' ' + node.value + ' ' + vlist[-1]
-                node.parent.value = value.strip()
-        if isinstance(node.parent.text, rule):
-            pr = node.parent.text.get_rule()
-            psr = node.parent.text.get_action(node.parent.raw_relation)
-            if pr == r == 4 and psr == sr == 0:
-                node.parent.value += ' ' + node.value
-                node.parent.childs = node.childs
-                print('4,0->4,0')
+        print("==========================================================")
+        print('node.raw_relation', node.raw_relation, 'node.text', node.text)
+        print(node.text.draw_rule(node.parent.value, node.value, node.raw_relation))
+        # print('Node: |', node.value, ' | parent: |', node.parent.value, '| relation: ', node.raw_relation)#text.draw_rule(node.parent.value, node.value, node.raw_relation))
 
-        print('rule:', r, '|raw_relation:', raw, '|value:', node.value, '|parent.value:', node.parent.value)
-        print(node.text.draw_rule(node.parent.value, node.value, raw))
-
-    i = 0
-    while i < len(node.childs):
-        r1 = node.childs[i].text.get_rule()
-        if i + 1 < len(node.childs):
-            if r1 == node.childs[i + 1].text.get_rule() == 10:
-                print('10,1 move to 10,0')
-                node.childs[i].childs.append(node.childs[i + 1])
-                del node.childs[i + 1]
-        draw_tree(node.childs[i])
-        if r1 == 0 or r1 == 11:
-            if len(node.childs[i].childs) > 0:
-                node.childs.extend(node.childs[i].childs)
-            del node.childs[i]
-        else:
-            i += 1
+    for child in node.childs:
+        draw_tree(child)
 
 # text = "Hello i'm your daughter"
 # text = "Ellen needs help"
@@ -337,7 +311,7 @@ def draw_tree(node):
 # text = "The visitors from El Paso"
 # text = "My parents saw them at a concert a long time ago."
 # text = "Jennifer took on two paper routes to earn money for camp."
-text = "The house looks tidy, but the yard is a mess."
+# text = "The house looks tidy, but the yard is a mess."
 # text = "Tom stopped to take a close look at the car."
 # text = "The guy must pass several trials to see and to take his bride away."
 # text = "The fighter seems out of shape."
@@ -353,37 +327,134 @@ text = "The house looks tidy, but the yard is a mess."
 # text = "How many apples does mary has."
 # text = "Everyone wondered when would start to play."
 # text = "A long time ago a the house looked neat and nice, like a new one, but eventually became obsolete."
+# text = "house looks, but yard is"
+# text = "The students worked so very hard"
+# text = "How many apples does mary has. "
 
-def parse_node(node, id):
-    item = { 'value': node.value }
 
-    if isinstance(node.text, rule):
-        r = node.text.get_rule()
-        item['id'] = id
-        item['rule'] = r
-        item['subRule'] = node.text.get_action(node.raw_relation)
-        if isinstance(node.parent.text, rule):
-            pr = node.parent.text.get_rule()
+def process_tree(node):
+    i = 0
+    ch = node['childs']
+    while i < len(ch):
+        r = ch[i]['rule']
+        sr = ch[i]['subRule']
+        pr = ch[i]['parent']['rule']
+        psr = ch[i]['parent']['subRule']
+        pas = ch[i]['parent']['as']
+        ch[i]['as'] = 'child'
+
+        # RuleDefault и RuleMerge прибавляем к родителю и удаляем
+        if r == 0 or r == 11:
+            if not ch[i]['value'] in {'-','!','?',',','.'}:
+                vlist = ch[i]['parent']['value'].split(' ')
+                value =  ' '.join(vlist[:-1]) + ' ' + ch[i]['value'] + ' ' + vlist[-1]
+                ch[i]['parent']['value'] = value.strip()
+            if len(ch[i]['childs']) > 0:
+                # Добавлем их потомков в потомки родителя
+                ch.extend(ch[i]['childs'])
+            del ch[i]
+            continue
+
+        # Заменяем parent.rule на 6 во ижбежание дублирования рисовки
+        elif r == 6:
+            if pr == 6:
+                if psr == 1 and sr == 0:
+                    ch[i]['parent']['rule'] = r
+                    ch[i]['parent']['subRule'] = 0
+                    ch[i]['parent']['as'] = 'parent'
+            else:
+                if (pr == 2 or pr == 3 or pr == 8) and pas != 'parent':
+                    if sr == 0:
+                        parent6 = ch[i]['parent'].copy()
+                        parent6['rule'] = r
+                        parent6['subRule'] = 0
+                        parent6['as'] = 'parent'
+                        parent6['childs'] = ch[i]['parent']['childs'].copy()
+                        parent6['parent'] = ch[i]['parent']
+                        ch[i]['parent']['value'] = ''
+                        ch[i]['parent']['childs'] = [parent6]
+                else:
+                    ch[i]['parent']['rule'] = r
+                    ch[i]['parent']['subRule'] = 0
+                    ch[i]['parent']['as'] = 'parent'
+
+        if pas != 'parent':
+            # Если parent.rule == ch[i] == ch[i+1] == 3
+            # то перемещаем ch[i+1] в ch[i] и меняем их значения
             if pr == r == 3:
-                item['subRule'] = 1
+                ch[i]['subRule'] = 1
+                if i + 1 < len(ch):
+                    if r == ch[i + 1]['rule'] == 3:
+                        print('3,1 move to 3,1')
+                        ch[i + 1]['subRule'] = 1
+                        ch[i]['value'], ch[i + 1]['value'] = [ch[i + 1]['value'], ch[i]['value']]
+                        ch[i]['childs'].append(ch[i + 1])
+                        del ch[i + 1]
 
-    item['childs'] = [parse_node(child, id + 1) for child in node.childs]
-    return item
+            # Если в (4,0) вложен (4,0) прибавляем его к родителю
+            elif pr == r == 4 and psr == sr == 0:
+                ch[i]['parent']['value'] += ' ' + ch[i]['value']
+                ch[i]['parent']['childs'] = ch[i]['childs']
+                for child in ch[i]['childs']:
+                    child['parent'] = ch[i]['parent']
+                print('4,0->4,0')
+
+        # Если после (10,0) идет (10,1) перемещаем его в (10,0)
+        if i + 1 < len(ch):
+            if r == ch[i + 1]['rule'] == 10:
+                print('10,1 move to 10,0')
+                ch[i]['childs'].append(ch[i + 1])
+                del ch[i + 1]
+
+        process_tree(ch[i])
+        i += 1
 
 def parse_sentence(sentence):
     result = []
-    id = 0
-    i = 0
     roots = construct_redkillog_graph(sentence)
 
-    for node in roots:
-        print('\n==========================================================')
-        print('=========================' , i, '=========================')
-        draw_tree(node)
-        result.append(parse_node(node, id))
-        i += 1
+    for i in range(len(roots)):
+        print('\n=====================================================')
+        print('=========================', i, '=========================')
+        draw_tree(roots[i])
+        r, sr = get_root_rule(roots[i].childs)
+        result.append({
+            'rule': r,
+            'subRule': sr,
+            'value': roots[i].value,
+            'as': 'parent',
+            'childs': []
+        })
+        node2dict(roots[i], result[i])
+        process_tree(result[i])
+        toJSON(result[i]);
     return result
 
+def node2dict(node, new_node):
+    ch = node.childs
+    for i in range(len(ch)):
+        raw = ch[i].raw_relation
+        new_node['childs'].append({
+            'rule': ch[i].text.get_rule(),
+            'subRule': ch[i].text.get_action(raw),
+            'value': ch[i].value,
+            'parent': new_node,
+            'childs': [],
+        })
+        node2dict(ch[i], new_node['childs'][i])
+
+def get_root_rule(childs):
+    for child in childs:
+        rt = child.text.get_rule()
+        srt = child.text.get_action(child.raw_relation)
+        if rt != 0 and rt != 11:
+            return rt, srt
+    return 1, 1
+
+def toJSON(node):
+    for child in node['childs']:
+        del child['parent']
+        toJSON(child)
 
 if __name__ == "__main__":
     print(parse_sentence(text))

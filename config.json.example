@@ -1,5 +1,6 @@
 {
   "server-protocol": "http://",
   "server-port": "80",
-  "server-ip": "localhost"
+  "server-ip": "localhost",
+  "debug": "true"
 }
