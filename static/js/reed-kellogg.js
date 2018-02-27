@@ -149,11 +149,11 @@ function drawSents(nodeList) {
     processTree(nodeList[i], currentNode, 0);
     clearWords();
 
-    if (parents > 1) {
-      $('#alert-warning').show('fast');
-    } else {
-      $('#alert-warning').hide('fast');
-    }
+    // if (parents > 1) {
+    //   $('#alert-warning').show('fast');
+    // } else {
+    //   $('#alert-warning').hide('fast');
+    // }
 
     graph.save();
     graph.clearRect(0, 0, canvas.width, canvas.height);
@@ -404,10 +404,10 @@ function showInfo(text, part, dep) {
     tagInfo.style.visibility = 'visible';
     tagInfo.style.opacity = 1;
   }
-
-  $('#word').text(text);
-  $('#part').text(part);
-  $('#dep').text(dep);
+  
+  document.getElementById('word').textContent = text;
+  document.getElementById('part').textContent = part;
+  document.getElementById('dep').textContent = dep;
 }
 
 var rules = [new Rule1, new Rule2, new Rule3, new Rule4, new Rule5, new Rule6, new Rule7, new Rule8, new Rule9, new Rule7];
