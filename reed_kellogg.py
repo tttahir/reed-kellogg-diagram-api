@@ -1,6 +1,8 @@
 import os
 import spacy
-import graph
+from graph import GraphNode
+from graph import get_part_of_speech
+from graph import get_dependent
 import sys
 
 nlp = spacy.load('en_core_web_sm')
@@ -193,7 +195,7 @@ def modify_graph(root, nodes_relation, graph_root, all_childs=None):
     child  = nodes_relation[0]#relation[0]
     relation_type = nodes_relation[1]#relation[1]
     diagram_relation_type  = decide_rule(relation_type, root, child, all_childs= all_childs)
-    child_graph_node = graph.GraphNode(text=diagram_relation_type, parent=graph_root, value=child.orth_, raw_relation = relation_type)
+    child_graph_node = GraphNode(text=diagram_relation_type, parent=graph_root, value=child.orth_, raw_relation = relation_type, meta=child)
     # print("Created child: |", child.orth_+ " " + str(child.i), "| for |", root.orth_ + " " + str(root.i), "|", " relation |", relation_type, "| decided rule: |", diagram_relation_type, "|")
     return child_graph_node
     # add child nodes to root, then check if they must be merged - merge
@@ -203,7 +205,7 @@ def construct_sent_diagram(sentence):
     # print("TYPE SENTENCE: ", type(sentence))
     # print("TYPE NODE: ", type(root))
     # sys.exit(1)
-    root_graph_node = graph.GraphNode(text="root", value=root.orth_)
+    root_graph_node = GraphNode(text="root", value=root.orth_, meta=root)
     truly_root = root_graph_node
     visited_nodes = [(root, root_graph_node)]
     subtrees = {str(root.orth_)+"_"+str(root.i) : {"nodes":set(root.subtree), "parent":None, "childs":[]}}
@@ -288,22 +290,28 @@ def construct_redkillog_graph(text):
         roots.append(root)
     return roots
 
-def draw_tree(node):
+def draw_tree(node, id):
     if node is None:
         return
     # print("Type node: ", type(node))
     # print('text', node.text)
+    print('=====================================================')
     if node.parent is None:
-        pass
-        # print("Node: |", node.value, " | parent: | root | relation: |", node.text, "|")
+        print('nesting:', id, '|||| value:', node.value, '|||| pvalue:', 'root')
+        print('tag:', node.meta.tag_)
     else:
-        print("==========================================================")
-        print('node.raw_relation', node.raw_relation, 'node.text', node.text)
-        print(node.text.draw_rule(node.parent.value, node.value, node.raw_relation))
-        # print('Node: |', node.value, ' | parent: |', node.parent.value, '| relation: ', node.raw_relation)#text.draw_rule(node.parent.value, node.value, node.raw_relation))
+        raw = node.raw_relation
+        r = node.text.get_rule()
+        sr = node.text.get_action(raw)
+        v = node.value
+        pv = node.parent.value
+        tag = node.meta.tag_
+        print('rule(' + str(r) + ',' + str(sr) + ')', '|||| nesting:', id, '|||| value:', v, '|||| pvalue:', pv)
+        print('raw:', raw, '|||| tag:', tag)
+        print(node.text.draw_rule(pv, v, raw))
 
     for child in node.childs:
-        draw_tree(child)
+        draw_tree(child, id + 1)
 
 # text = "Hello i'm your daughter"
 # text = "Ellen needs help"
@@ -352,6 +360,8 @@ def process_tree(node):
             if len(ch[i]['childs']) > 0:
                 # Добавлем их потомков в потомки родителя
                 ch.extend(ch[i]['childs'])
+                for child in ch[i]['childs']:
+                    child['parent'] = ch[i]['parent']
             del ch[i]
             continue
 
@@ -363,7 +373,7 @@ def process_tree(node):
                     ch[i]['parent']['subRule'] = 0
                     ch[i]['parent']['as'] = 'parent'
             else:
-                if (pr == 2 or pr == 3 or pr == 8) and pas != 'parent':
+                if ((pr == 1 and psr == 1) or pr == 2 or pr == 3 or pr == 8) and pas != 'parent':
                     if sr == 0:
                         parent6 = ch[i]['parent'].copy()
                         parent6['rule'] = r
@@ -377,6 +387,17 @@ def process_tree(node):
                     ch[i]['parent']['rule'] = r
                     ch[i]['parent']['subRule'] = 0
                     ch[i]['parent']['as'] = 'parent'
+
+        # Создаем parent для правила (9,1)
+        elif r == 9 and sr == 1 and (pr != 9 or psr != 1):
+            child9 = ch[i].copy()
+            child9['parent'] = ch[i]
+            for child in ch[i]['childs']:
+                child['parent'] = child9
+            child9['childs'] = ch[i]['childs'].copy()
+            ch[i]['as'] = 'parent'
+            ch[i]['value'] = ''
+            ch[i]['childs'] = [child9]
 
         if pas != 'parent':
             # Если parent.rule == ch[i] == ch[i+1] == 3
@@ -416,12 +437,14 @@ def parse_sentence(sentence):
     for i in range(len(roots)):
         print('\n=====================================================')
         print('=========================', i, '=========================')
-        draw_tree(roots[i])
+        draw_tree(roots[i], 0)
         r, sr = get_root_rule(roots[i].childs)
         result.append({
             'rule': r,
             'subRule': sr,
             'value': roots[i].value,
+            'dep': 'root',
+            'part': get_part_of_speech(roots[i].meta.tag_),
             'as': 'parent',
             'childs': []
         })
@@ -438,6 +461,8 @@ def node2dict(node, new_node):
             'rule': ch[i].text.get_rule(),
             'subRule': ch[i].text.get_action(raw),
             'value': ch[i].value,
+            'dep': get_dependent(ch[i].raw_relation),
+            'part': get_part_of_speech(ch[i].meta.tag_),
             'parent': new_node,
             'childs': [],
         })

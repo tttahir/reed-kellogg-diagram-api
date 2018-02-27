@@ -1,11 +1,17 @@
 var sentence = document.getElementById('sentence');
 var scale = document.getElementById('range');
+var tagInfo = document.getElementById('tag-info');
+var canvasParent = document.getElementById('canvas-outer');
 var canvas = document.getElementById('draw');
 var graph = canvas.getContext('2d');
+var pstyle = getComputedStyle(canvasParent);
+var font = pstyle.fontSize + ' ' + pstyle.fontFamily;
+var strokeStyle = '#000';
+var lineWidth = 1;
 
-graph.font = '15px Arial';
-graph.strokeStyle = '#000';
-graph.lineWidth = 1;
+graph.font = font;
+graph.strokeStyle = strokeStyle;
+graph.lineWidth = lineWidth;
 sentence.value = '';
 
 function onEnter(event, callback) {
@@ -49,7 +55,7 @@ function processSentence() {
 /* нет примера для 5-го правила */
 /* ======= нет связи между потомком и родителем ======= */
 // sentence.value += "Little cat, I have no flat. "; // [3,0], [1,0], [1,1], [3,0]
-// sentence.value += "Coffee is a delicate art, perfected over centuries of history and world culture and tastes. ";
+// sentence.value += "Coffee is a delicate art, perfected over centuries of history and world culture and tastes. "; // [6,0]
 // sentence.value += "The United States of America, commonly known as the United States or America, is a federal republic composed of 50 states. ";
 // sentence.value += "Cofee is a delicate art preferd over centuries. ";
 // sentence.value += "From Paris with love. "; // [4,0], [4,1]
@@ -61,7 +67,7 @@ function processSentence() {
 // sentence.value += "Sally ran down the street. "; // [3,0], [4,0], [4,1]
 // sentence.value += "Old as Mary and you. "; // [4,0], [4,1], [6,0], [6,1]
 // sentence.value += "Hello i'm your daughter. "; // [0,0], [1,0], [2,0], [3,0]
-// sentence.value += "Ellen needs help. "; // [1,0], [1,1]
+sentence.value += "Ellen needs help. "; // [1,0], [1,1]
 // sentence.value += "Ellen from Mars needs help. "; // [1,0], [1,1]
 // sentence.value += "She's not as old as Mary. "; // [1,0], [3,0], [2,0], [4,0], [4,1]
 // sentence.value += "The visitors from El Paso arrived on schedule. "; // [1,0], [3,0], [0,0], [4,1], [4,0]
@@ -85,7 +91,7 @@ function processSentence() {
 // sentence.value += "And finish. "; // [1,0], [11,0], [6,0], [1,1], [3,0]
 // sentence.value += "Everyone wondered when would end the play. "; // [1,0], [1,1], [7,0], [3,0], [11,0]
 // sentence.value += "You choose a color that you like. "; // [1,0], [1,1], [3,0], [7,0]
-// sentence.value += "The ship drew-on and had safely passed the strait. "; // 
+// sentence.value += "The ship drew-on and had safely passed the strait. "; // [6,0]
 // sentence.value += "The young man left his station by the pilot once he spotted the owner. " // [7,0], [7,1]
 
 /* =========== за 3,0 следует 3,0 =========== */
@@ -93,16 +99,15 @@ function processSentence() {
 // sentence.value += "The students worked so very hard. "; // [1,0], [3,0], [3,0], [3,0], [3,0]
 
 /* 9 правило */
-// sentence.value += "Leaving his station by the pilot, the young man on board saw this person approach. "
-// sentence.value += "Trailblazers are the ones who make the world go around. "
-// sentence.value += "Trailblazers make the world go round. "
-// sentence.value += "The young man on board saw this person approach. "
-// sentence.value += "You choose a color that you like"; // [1,0], [1,1], [3,0], [9,0]
+// sentence.value += "Leaving his station by the pilot, the young man on board saw this person approach. ";
+// sentence.value += "Trailblazers are the ones who make the world go around. ";
+// sentence.value += "Trailblazers make the world go round. ";
+// sentence.value += "The young man on board saw this person approach. ";
 // sentence.value += "To know him is to love him. "; // [9,0], [9,1], [11,0], [1,0], [1,1]
 // sentence.value += "Tom stopped to take a close look at the car. "; // [1,0], [9,1], [11,0], [1,1], [3,0], [4,0], [4,1]
-// sentence.value += "Mary tried her best to win the writing contest, but lacked the skills and training she really needed. ";
+// sentence.value += "Mary tried her best to win the writing contest, but lacked the skills and training she really needed. "; // [6,0], [6,1]
 // sentence.value += "The boys were engaged in extreme sports, each being injured while trying to push their limits. ";
-// sentence.value += "When the young man on board saw this person approach, he left his station by the pilot, and, hat in hand, leaned over the ship's butwarks"
+// sentence.value += "When the young man on board saw this person approach, he left his station by the pilot, and, hat in hand, leaned over the ship's butwarks";
 
 /* =========== сложные предложения =========== */
 // [3,0], [7,0], [1,0], [2,0], [6,0], [6,1], [0,0], [4,0], [4,1]
@@ -116,6 +121,7 @@ function processSentence() {
 // sentence.value += "The fighter seems out of of of of of a the shape from Mars. ";
 // sentence.value += "The fighter seems of the shape. ";
 
+if (!debug) sentence.value = '';
 
 var th = parseInt(graph.font); // text height - (font-size in px)
 var tpb = 7; // text padding bottom
@@ -132,9 +138,6 @@ var parents = 0;
 function drawSents(nodeList) {
   if (!nodeList.length) return;
 
-  var out = document.getElementById('diagrams');
-
-  out.innerHTML = '';
   canvas.className = 'border';
   
   for (var i = 0; i < nodeList.length; i++) {
@@ -144,6 +147,7 @@ function drawSents(nodeList) {
     console.log('<<<<<<<<< Sentence', i, '>>>>>>>>>');
     setParentCoords(nodeList[i]);
     processTree(nodeList[i], currentNode, 0);
+    clearWords();
 
     if (parents > 1) {
       $('#alert-warning').show('fast');
@@ -162,12 +166,21 @@ function drawSents(nodeList) {
     graph.restore();
 
     if (debug) {
+      var out = document.getElementById('diagrams');
       var img = new Image();
+      out.innerHTML = '';
       img.src = canvas.toDataURL();
       out.appendChild(img);
     }
     console.log(nodeList[i]);
     // console.log(currentNode);
+  }
+}
+
+function clearWords() {
+  var words = canvasParent.children;
+  while (words[1]) {
+    canvasParent.removeChild(words[1]);
   }
 }
 
@@ -211,9 +224,9 @@ function correctCoords(node) {
 }
 
 function drawParent(node) {
-  graph.font = '15px Arial';
-  graph.strokeStyle = '#000';
-  graph.lineWidth = 1;
+  graph.font = font;
+  graph.strokeStyle = strokeStyle;
+  graph.lineWidth = lineWidth;
   rules[node.rule - 1].drawNode(node);
 }
 
@@ -272,7 +285,11 @@ function setChildCoords(node) {
   var rule = node.rule + '' + node.subRule;
   node.left = tind;
 
-  if (!/3|40|71/.test(rule)) {
+  if (/3|40|71/.test(rule)) {
+    Object.defineProperty(node, 'right', {
+      get: function() { return this.x; }
+    });
+  } else {
     Object.defineProperty(node, 'right', {
       get: function() { return right.call(this); }
     });
@@ -280,20 +297,20 @@ function setChildCoords(node) {
 }
 
 function increaseLeft(node, left) {
-  var prevParent = node.parent;
-  var parent = prevParent.parent;
+  var child = node.parent;
+  var parent = child.parent;
 
   while (parent) {
-    var r = parent.rule, cr = prevParent.rule;
-    var sr = parent.subRule, csr = prevParent.subRule;
+    var r = parent.rule, cr = child.rule;
+    var sr = parent.subRule, csr = child.subRule;
 
     if ((cr == 1 || cr == 2) && (r == 1 || r == 6 || r == 8)) {
-      console.log(prevParent.value, parent.value);
+      console.log(child.value, parent.value);
     } else if (cr == 6 && csr == 1 && r == 6 && sr == 0) {
-      console.log(prevParent.value, parent.value);
+      console.log(child.value, parent.value);
     } else parent.left += left;
 
-    prevParent = parent;
+    child = parent;
     parent = parent.parent;
   }
 }
@@ -306,12 +323,10 @@ function copy(obj) {
 
   if (xt) Object.defineProperty(res, 'x', xt);
   if (yt) Object.defineProperty(res, 'y', yt);
-  if (rt) Object.defineProperty(res, 'right', xt);
+  if (rt) Object.defineProperty(res, 'right', rt);
 
   for (var key in obj) {
-    if (key != 'childs') {
-      res[key] = obj[key];
-    }
+    if (key != 'childs') res[key] = obj[key];
   }
 
   return res;
@@ -371,6 +386,30 @@ function showLog(node) {
   console.log(str.join(' '), 'color: #79f592', 'color: #8daef6', 'color: #ffd979', 'color: #fff');
 }
 
+function fillText(node, x, y) {
+  var tag = document.createElement('div');
+  tag.textContent = node.value;
+  tag.className = 'tag';
+  tag.style.width = (tw(node.value) + 5) + 'px';
+  tag.style.left = (x - 2) + 'px';
+  tag.style.top = (y - 15) + 'px';
+  tag.addEventListener('mouseenter', function() {
+    showInfo(node.value, node.part, node.dep);
+  });
+  canvasParent.appendChild(tag);
+}
+
+function showInfo(text, part, dep) {
+  if (tagInfo.style.visibility == 'hidden') {
+    tagInfo.style.visibility = 'visible';
+    tagInfo.style.opacity = 1;
+  }
+
+  $('#word').text(text);
+  $('#part').text(part);
+  $('#dep').text(dep);
+}
+
 var rules = [new Rule1, new Rule2, new Rule3, new Rule4, new Rule5, new Rule6, new Rule7, new Rule8, new Rule9, new Rule7];
 
 function Rule1() {
@@ -387,7 +426,7 @@ function Rule1() {
     } else { // Rule(1:0)
       // __ child __|__ parent __
       //            |
-      change7_10(node.parent, 1, 0);
+      // change7_10(node.parent, 1, 0);
       setChildCoords(node);
       Object.defineProperties(node, {
         'x': {
@@ -397,7 +436,6 @@ function Rule1() {
             if (node.parent.rule == 6) {
               return node.parent.x - max - tind - lh6;
             }
-
             return node.parent.x - max;
           }
         },
@@ -406,7 +444,6 @@ function Rule1() {
             if (node.parent.rule == 6) {
               return node.parent.y - deg50(lh6);
             }
-
             return node.parent.y;
           }
         }
@@ -415,19 +452,20 @@ function Rule1() {
   };
 
   this.drawNode = function(node) {
+    fillText(node, node.x + tind, node.y - tpb);
+
     if (node.subRule) { // Rule(1:1)
       // __ parent __|__ child __
+
       if (node.as == 'parent') {
         graph.moveTo(node.x, node.y);
         graph.lineTo(node.right, node.y);
         graph.moveTo(node.right, node.y - lh1);
         graph.lineTo(node.right, node.y);
-        graph.fillText(node.value, node.x + tind, node.y - tpb);
       } else {
         graph.moveTo(node.x, node.y - lh1);
         graph.lineTo(node.x, node.y);
         graph.lineTo(node.right, node.y);
-        graph.fillText(node.value, node.x + tind, node.y - tpb);
       }
     } else { // Rule(1:0)
       // __ child __|__ parent __
@@ -437,13 +475,11 @@ function Rule1() {
         graph.lineTo(node.x, node.y + lh1);
         graph.moveTo(node.x, node.y);
         graph.lineTo(node.right, node.y);
-        graph.fillText(node.value, node.x + tind, node.y - tpb);
       } else {
         graph.moveTo(node.x, node.y);
         graph.lineTo(node.right, node.y);
         graph.moveTo(node.right, node.y - lh1);
         graph.lineTo(node.right, node.y + lh1);
-        graph.fillText(node.value, node.x + tind, node.y - tpb);
       }
     }
   };
@@ -463,18 +499,17 @@ function Rule2() {
 
   this.drawNode = function(node) {
     // ___ parent ___\___ child ____
+    fillText(node, node.x + tind, node.y - tpb);
 
     if (node.as == 'parent') {
       graph.moveTo(node.x, node.y);
       graph.lineTo(node.right, node.y);
       graph.moveTo(node.right - lh2, node.y - deg50(lh2));
       graph.lineTo(node.right, node.y);
-      graph.fillText(node.value, node.x + tind, node.y - tpb);
     } else {
       graph.moveTo(node.x - lh2, node.y - deg50(lh2));
       graph.lineTo(node.x, node.y);
       graph.lineTo(node.right, node.y);
-      graph.fillText(node.value, node.x + tind, node.y - tpb);
     }
   };
 }
@@ -491,6 +526,12 @@ function Rule3() {
       //  \ child
       //   \
       setChildCoords(node);
+      node.width = Math.max(tw(node.value) + lh3/2 + th/2, lh3) + prht;
+      var incLeft = node.width - node.parent.width;
+
+      if (incLeft > 0) increaseLeft(node, incLeft);
+      else node.width = node.parent.width;
+
       Object.defineProperties(node, {
         'x': { get: function() { return node.parent.x; } },
         'y': { get : function() { return node.parent.y + deg50(lh3); } }
@@ -500,8 +541,9 @@ function Rule3() {
       //    \
       //     \ child
       //      \
-      change7_10(node.parent, 3, 0);
+      // change7_10(node.parent, 3, 0);
       setChildCoords(node);
+      node.width = Math.max(tw(node.value) + lh3/2 + th/2, lh3) + prht;
       Object.defineProperties(node, {
         'x': {
           get: (function() { return node.parent.x + lh3 + this; }).bind(node.parent.left)
@@ -509,15 +551,14 @@ function Rule3() {
         'y': { get : function() { return node.parent.y + deg50(lh3); } }
       });
 
-      chLeft = tw(node.value) + lh3/2 + th/2 + prht;
-      parWid = tw(node.parent.value) + tind;
+      var pwidth = tw(node.parent.value) + tind;
       
-      if (node.parent.left < parWid) {
-        var incLeft = node.parent.left + chLeft - parWid;
+      if (node.parent.left < pwidth) {
+        var incLeft = node.parent.left + node.width - pwidth;
         if (incLeft > 0) increaseLeft(node, incLeft);
-      } else increaseLeft(node, chLeft);
+      } else increaseLeft(node, node.width);
       
-      node.parent.left += chLeft;
+      node.parent.left += node.width;
     }
   };
 
@@ -529,16 +570,16 @@ function Rule3() {
       // \
       //  \ child
       //   \
+      fillText(node, node.x - lh3/2 + th/2, node.y - deg50(lh3/2));
+
       if (node.as == 'parent') {
         graph.moveTo(node.x, node.y);
         graph.lineTo(node.x - lh3, node.y - deg50(lh3));
-        graph.fillText(node.value, node.x - lh3/2 + th/2, node.y - deg50(lh3/2));
       } else {
         var xt = node.x, yt = node.y;
         graph.moveTo(xt, yt);
         graph.lineTo(xt -= lh3, yt -= deg50(lh3));
         graph.lineTo(xt += lh3/2, yt -= deg50(lh3/2));
-        graph.fillText(node.value, node.x - lh3/2 + th/2, node.y - deg50(lh3/2));
       }
     } else { // Rule(3:0)
       // __ parent __
@@ -548,11 +589,11 @@ function Rule3() {
       if (node.as == 'parent') {
         graph.moveTo(node.x, node.y);
         graph.lineTo(node.right, node.y);
-        graph.fillText(node.value, node.x + tind, node.y - tpb);
+        fillText(node, node.x + tind, node.y - tpb);
       } else {
         graph.moveTo(node.x, node.y);
         graph.lineTo(node.x - lh3, node.y - deg50(lh3));
-        graph.fillText(node.value, node.x - lh3/2 + th/2, node.y - deg50(lh3/2));
+        fillText(node, node.x - lh3/2 + th/2, node.y - deg50(lh3/2));
       }
     }
   };
@@ -560,8 +601,8 @@ function Rule3() {
 
 function Rule4() {
   this.getData = function(node) {
-    var left = 0;
-    var pleft = 0;
+    var cwidth = 0;
+    var pwidth = 0;
     showLog(node);
 
     if (node.subRule) { // Rule(4:1)
@@ -575,10 +616,18 @@ function Rule4() {
         'y': { get : function() { return node.parent.y; } }
       });
 
-      chLeft = lh4 + tind + tw(node.value);
-      parWid = Math.max(lh4/2 + th/2 + tw(node.parent.value), lh4 + tind);
+      if (node.parent.parent) {
+        var preleft = node.parent.parent.left - node.parent.width;
+        var pleft = node.parent.parent.left;
+        cwidth = lh4 + tind*2 + tw(node.value);
+        var incLeft = preleft + cwidth - pleft;
+        pwidth = tw(node.parent.parent.value);
 
-      if (chLeft - parWid > 0) increaseLeft(node, chLeft - parWid);
+        if (pleft < pwidth + tind) {
+          incLeft = preleft + cwidth - pwidth;
+          if (incLeft > 0) increaseLeft(node, incLeft);
+        } else increaseLeft(node, incLeft);
+      }
     } else { // Rule(4:0)
       // __ parent __
       //    \
@@ -586,6 +635,7 @@ function Rule4() {
       //      \__
 
       setChildCoords(node);
+      node.width = Math.max(lh4/2 + th/2 + tw(node.value), lh4 + tind) + prht;
       Object.defineProperties(node, {
         'x': {
           get: (function() { return node.parent.x + lh4 + this; }).bind(node.parent.left)
@@ -593,15 +643,14 @@ function Rule4() {
         'y': { get : function() { return node.parent.y + deg50(lh4); } }
       });
 
-      chLeft = Math.max(lh4/2 + th/2 + tw(node.value), lh4 + tind) + prht;
-      parWid = tw(node.parent.value) + tind;
+      pwidth = tind + tw(node.parent.value);
       
-      if (node.parent.left < parWid) {
-        var incLeft = node.parent.left + chLeft - parWid;
+      if (node.parent.left < pwidth) {
+        var incLeft = node.parent.left + node.width - pwidth;
         if (incLeft > 0) increaseLeft(node, incLeft);
-      } else increaseLeft(node, chLeft);
+      } else increaseLeft(node, node.width);
 
-      node.parent.left += chLeft;
+      node.parent.left += node.width;
     }
   };
 
@@ -613,11 +662,11 @@ function Rule4() {
       if (node.as == 'parent') {
         graph.moveTo(node.x, node.y);
         graph.lineTo(node.x - lh4, node.y - deg50(lh4));
-        graph.fillText(node.value, node.x - lh4/2 + th/2, node.y - deg50(lh4/2));
+        fillText(node, node.x - lh4/2 + th/2, node.y - deg50(lh4/2));
       } else {
         graph.moveTo(node.x, node.y);
         graph.lineTo(node.right, node.y);
-        graph.fillText(node.value, node.x + tind, node.y - tpb);
+        fillText(node, node.x + tind, node.y - tpb);
       }
     } else { // Rule(4:0)
       // __ parent __
@@ -627,12 +676,12 @@ function Rule4() {
       if (node.as == 'parent') {
         graph.moveTo(node.x, node.y);
         graph.lineTo(node.right, node.y);
-        graph.fillText(node.value, node.x + tind, node.y - tpb);
+        fillText(node, node.x + tind, node.y - tpb);
       } else {
         graph.moveTo(node.x - lh4, node.y - deg50(lh4));
         graph.lineTo(node.x, node.y);
         graph.lineTo(node.x + tind, node.y);
-        graph.fillText(node.value, node.x - lh4/2 + th/2, node.y - deg50(lh4/2));
+        fillText(node, node.x - lh4/2 + th/2, node.y - deg50(lh4/2));
       }
     }
   };
@@ -709,6 +758,42 @@ function Rule6() {
             'y': { get: function() { return node.parent.y; } },
           });
         }
+
+        var cwidth = lh6 + tind*3 + tw(node.value);
+        var pwidth = tw(node.parent.value);
+        var incLeft = 0;
+        
+        if (r == 3) {
+          // 
+        } else if (r == 4) {
+          if (node.parent.parent) {
+            var preLeft = node.parent.parent.left - node.parent.width;
+            var pleft = node.parent.parent.left;
+            cwidth += lh4;
+            incLeft = preLeft + cwidth - pleft;
+            pwidth = tw(node.parent.parent.value);
+
+            if (pleft < pwidth + tind) {
+              incLeft = preLeft + cwidth - pwidth;
+              if (incLeft > 0) increaseLeft(node, incLeft);
+            } else increaseLeft(node, incLeft);
+          }
+        } else if (r == 6) {
+          // if (node.parent.left < pwidth) {
+          //   var incLeft = node.parent.left + cwidth - pwidth;
+          //   if (incLeft > 0) increaseLeft(node, incLeft);
+          // } else increaseLeft(node, cwidth);
+        } else if (r == 8) {
+          if (node.parent.parent) {
+            var pleft = node.parent.parent.left;
+            pwidth = tind + tw(node.parent.parent.value);
+
+            if (pleft < pwidth) {
+              incLeft = pleft + cwidth - pwidth;
+              if (incLeft > 0) increaseLeft(node, incLeft);
+            } else increaseLeft(node, cwidth);
+          }
+        }
       } else {
         Object.defineProperties(node, {
           'x': { get: function() { return node.parent.x; } },
@@ -733,14 +818,14 @@ function Rule6() {
         graph.lineTo(xt += lh6, yt += deg50(lh6));
         dashedLine(xt, yt, xt, yt - deg50(lh6*2));
         graph.lineTo(xt = node.right, yt);
-        graph.fillText(node.value, node.x + tind, yt - tpb);
+        fillText(node, node.x + tind, yt - tpb);
         graph.moveTo(xt = node.x - lh6, yt = node.y - deg50(lh6));
         graph.lineTo(xt += lh6, yt -= deg50(lh6));
       } else {
         graph.moveTo(node.x - lh6, node.y + node.height);
         graph.lineTo(node.x, node.y);
         graph.lineTo(node.right, node.y);
-        graph.fillText(node.value, node.x + tind, node.y - tpb);
+        fillText(node, node.x + tind, node.y - tpb);
       }
     } else { // Rule(6:0)
       //     
@@ -754,11 +839,11 @@ function Rule6() {
         graph.lineTo(xt += lh6, yt += deg50(lh6));
         dashedLine(xt, yt, xt, yt - deg50(lh6*2));
         graph.lineTo(xt = node.right, yt);
-        graph.fillText(node.value, node.x + tind, yt - tpb);
+        fillText(node, node.x + tind, yt - tpb);
         graph.moveTo(xt = node.x - lh6, yt = node.y - deg50(lh6));
         graph.lineTo(xt += lh6, yt -= deg50(lh6));
       } else {
-        graph.fillText(node.value, node.x + tpl, node.y);
+        fillText(node, node.x + 10, node.y);
       }
     }
   };
@@ -780,22 +865,37 @@ function Rule7() {
       });
     } else { // Rule(7:0)
       // __ parent __
-      //  |
-      //  |
-      //  |
-      // __ child __
+      //   |
+      //   |
+      //   |
+      //  __ child __
 
       setChildCoords(node);
       node.height = lh7;
       Object.defineProperties(node, {
         'x': {
-          get: function() {
-            if (node.parent.rule == 3) return node.parent.x - tind/2;
-            return node.parent.x;
-          }
+          get: (function() {
+            if (node.parent.rule == 3 && node.parent.as == 'child') return node.parent.x - tind/2;
+            return node.parent.x + this - tind/2;
+          }).bind(node.parent.left)
         },
         'y': { get: function() { return node.parent.y + node.height; } }
       });
+
+      var cwidth = tind/2 + tw(node.value);
+      var pwidth = tw(node.parent.value) + tind;
+
+      if (node.parent.rule == 3) {
+        pwidth = tw(node.parent.value) - lh3/2 + th/2;
+        if (cwidth - pwidth > 0) increaseLeft(node, cwidth - pwidth)
+      } else {
+        if (node.parent.left < pwidth) {
+          var incLeft = node.parent.left + cwidth - pwidth;
+          if (incLeft > 0) increaseLeft(node, incLeft);
+        } else increaseLeft(node, cwidth);
+      }
+
+      node.parent.left += cwidth;
     }
   };
 
@@ -808,28 +908,28 @@ function Rule7() {
       if (node.as == 'parent') {
         graph.moveTo(node.x, node.y);
         graph.lineTo(node.right, node.y);
-        graph.fillText(node.value, node.x + tind, node.y - tpb);
+        fillText(node, node.x + tind, node.y - tpb);
       } else {
         graph.moveTo(node.x, node.y);
         dashedLine(node.x, node.y + 45, node.x, node.y - th*2);
-        graph.fillText(node.value, node.x + 7, node.y);
+        fillText(node, node.x + 7, node.y);
       }
     } else { // Rule(7:0)
       // __ parent __
-      //  |
-      //  |
-      //  |
-      // __ child __
+      //   |
+      //   |
+      //   |
+      //  __ child __
+      fillText(node, node.x + tind, node.y - tpb);
+
       if (node.as == 'parent') {
         graph.moveTo(node.x, node.y);
         graph.lineTo(node.right, node.y);
-        dashedLine(node.x + tind/2, node.y, node.x + tind/2, node.y + node.height);
-        graph.fillText(node.value, node.x + tind, node.y - tpb);
+        dashedLine(node.x, node.y, node.x, node.y + node.height);
       } else {
         graph.moveTo(node.x, node.y);
         graph.lineTo(node.right, node.y);
         dashedLine(node.x + tind/2, node.y, node.x + tind/2, node.y - node.height);
-        graph.fillText(node.value, node.x + tind, node.y - tpb);
       }
     }
   };
@@ -850,10 +950,17 @@ function Rule8() {
       'y': { get: function() { return node.parent.y + deg50(lh8); } }
     });
 
-    var left = lh8 + tind + tw(node.value);
-    var pleft = tw(node.parent.value);
-    node.parent.left += left;
-    if (left - pleft > 0) increaseLeft(node, left - pleft);
+    var cwidth = lh8 + tind*2 + tw(node.value) + prht;
+    var pwidth = tind + tw(node.parent.value);
+
+    if (node.value == '') cwidth -= tind*2;
+    
+    if (node.parent.left < pwidth) {
+      var incLeft = node.parent.left + node.width - pwidth;
+      if (incLeft > 0) increaseLeft(node, incLeft);
+    } else increaseLeft(node, node.width);
+
+    node.parent.left += cwidth;
   };
 
   this.drawNode = function(node) {
@@ -861,18 +968,25 @@ function Rule8() {
     //    \
     //     \ to
     //      \__ child __
+    fillText(node, node.x + tind, node.y - tpb);
+
     if (node.as == 'parent') {
       graph.moveTo(node.x, node.y);
       graph.lineTo(node.right, node.y);
-      graph.fillText(node.value, node.x + tind, node.y - tpb);
     } else {
       var xt = node.x - lh8;
+      var to = {
+        'value': 'to',
+        'part': 'particle',
+        'raw': 'Infinitive',
+        'rel': 'adverb modifier'
+      };
+
       graph.moveTo(node.x, node.y);
       graph.lineTo(xt, node.y - deg50(lh8));
-      graph.fillText('to', xt + lh8/2 + th/2, node.y - deg50(lh8/2));
+      fillText(to, xt + lh8/2 + th/2, node.y - deg50(lh8/2));
       graph.moveTo(node.x, node.y);
       graph.lineTo(node.right, node.y);
-      graph.fillText(node.value, node.x + tind, node.y - tpb);
     }
   };
 }
@@ -885,23 +999,21 @@ function Rule9() {
       //       |
       //       |
       //       |
-      //   \__/_\__ <- parent91
-      var parent91 = copy(node);
-      parent91.as = 'parent';
-      parent91.value = '';
-      node.parent.childs.push(parent91);
-      Object.defineProperties(parent91, {
-        'x': { get: function() { return node.parent.right; } },
-        'y': { get: function() { return node.parent.y; } },
-        'right': { get: function() { return this.x + tind*3; } }
-      });
-
-      setChildCoords(node);
-      node.height = lh9;
-      Object.defineProperties(node, {
-        'x': { get: function() { return parent91.x + tind + lh2 - tind/2; } },
-        'y': { get: function() { return parent91.y - this.height - deg50(lh2); } }
-      });
+      //   \__/_\__ <- parent
+      if (node.as == 'parent') {
+        Object.defineProperties(node, {
+          'x': { get: function() { return node.parent.right; } },
+          'y': { get: function() { return node.parent.y; } },
+          'right': { get: function() { return this.x + tind*3; } }
+        });
+      } else {
+        setChildCoords(node);
+        node.height = lh9;
+        Object.defineProperties(node, {
+          'x': { get: function() { return node.parent.x + tind + lh2 - tind/2; } },
+          'y': { get: function() { return node.parent.y - this.height - deg50(lh2); } }
+        });
+      }
     } else { // Rule(9:0)
       // (x,y)__ child __
       //       |
@@ -937,7 +1049,7 @@ function Rule9() {
         graph.lineTo(node.right, yt);
         graph.moveTo(xt += tind/2, yt);
         graph.lineTo(xt, yt + node.height);
-        graph.fillText(node.value, node.x + tind, node.y - tpb);
+        fillText(node, node.x + tind, node.y - tpb);
       }
     } else { // Rule(9:0)
       // (x,y)__ child __
@@ -955,13 +1067,13 @@ function Rule9() {
         graph.moveTo(xt, yt - lh1);
         graph.lineTo(xt, yt);
         graph.lineTo(node.right, yt);
-        graph.fillText(node.value, xt + tind, yt - tpb);
+        fillText(node, xt + tind, yt - tpb);
       } else {
         graph.moveTo(xt, yt);
         graph.lineTo(node.right, yt);
         graph.moveTo(xt += tind/2, yt);
         graph.lineTo(xt, yt + node.height);
-        graph.fillText(node.value, node.x + tind, node.y - tpb);
+        fillText(node, node.x + tind, node.y - tpb);
       }
     }
   };
@@ -976,4 +1088,4 @@ function Rule9() {
 // + там где нет связи выводить сообщение
 // + исправлена замена объектов при одинаковом уровне вхождения
 // + RuleDefault и RuleMerge прибавляются к родителю
-// - замена 2го 6ым
+// + замена 2го 6ым

@@ -12,7 +12,7 @@
   <script defer src="/static/js/jquery-3.2.1.min.js"></script>
   <script defer src="/static/js/bootstrap.min.js"></script>
   <script defer src="/static/js/reed-kellogg.js"></script>
-  <script> var debug = {{ debug }}; </script>
+  <script>var debug = {{ debug }};</script>
 </head>
 <body>
   <div class="wrapper">
@@ -32,17 +32,34 @@
     </div>
     <div class="row">
       <div class="col-xs-12">
+        <div class="flex">
+          <div class="panel panel-info" id="tag-info" style="visibility: hidden;">
+            <div class="panel-heading text-center" id="word">-</div>
+            <ul class="list-group">
+              <li class="list-group-item">Part of speech: <span id="part"></span></li>
+              <li class="list-group-item" id="dep">-</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
         <label>Diagram</label>
-        <p><canvas id="draw" width="20" height="20"></canvas></p>
+        <div class="canvas-outer" id="canvas-outer">
+          <canvas id="draw" width="20" height="20"></canvas>
+        </div>
+      </div>
+    </div>
+    {% if debug == 'true' %}
+    <div class="row">
+      <div class="col-xs-12">
+        <!-- <label for="sentence">Diagram size</label> -->
+        <!-- <p><input id="range" type="range" min="0.5" max="2" step="0.1" value="1" onchange="drawSentences()"></p> -->
         <div id="diagrams"></div>
       </div>
     </div>
-    <!-- <div class="row">
-      <div class="col-xs-12">
-        <label for="sentence">Diagram size</label>
-        <p><input id="range" type="range" min="0.5" max="2" step="0.1" value="1" onchange="drawSentences()"></p>
-      </div>
-    </div> -->
+    {% end %}
   </div>
 </body>
 </html>
