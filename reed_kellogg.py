@@ -298,7 +298,7 @@ def draw_tree(node, id):
     print('=====================================================')
     if node.parent is None:
         print('nesting:', id, '|||| value:', node.value, '|||| pvalue:', 'root')
-        print('tag:', node.meta.tag_)
+        print('tag:', node.meta.tag_, '|||| i:', node.meta.i)
     else:
         raw = node.raw_relation
         r = node.text.get_rule()
@@ -307,7 +307,7 @@ def draw_tree(node, id):
         pv = node.parent.value
         tag = node.meta.tag_
         print('rule(' + str(r) + ',' + str(sr) + ')', '|||| nesting:', id, '|||| value:', v, '|||| pvalue:', pv)
-        print('raw:', raw, '|||| tag:', tag)
+        print('raw:', raw, '|||| tag:', tag, '|||| i:', node.meta.i)
         print(node.text.draw_rule(pv, v, raw))
 
     for child in node.childs:

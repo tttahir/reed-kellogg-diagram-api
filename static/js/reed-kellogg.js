@@ -83,7 +83,7 @@ function processSentence() {
 // sentence.value += "John and Sam were there. "; // [1,0], [0,0], [6,1], [6,0], [3,0]
 // sentence.value += "The people who live on this street seem pleasant. "; // [1,0], [3,0], [7,0], [4,0], [4,1], [0,0]
 // sentence.value += "We enjoy talking. "; // 2 [1,0], [11,0]
-sentence.value += "My brother and I are getting together for dinner. "; // 1 [1,0], [3,0], [6,0], [6,1], [11,0], [4,0], [4,1]
+// sentence.value += "My brother and I are getting together for dinner. "; // 1 [1,0], [3,0], [6,0], [6,1], [11,0], [4,0], [4,1]
 // sentence.value += "He left early because he felt sick. "; // [1,0], [3,0], [7,0], [7,1], [2,0]
 // sentence.value += "We are campers tired but happy. "; // [1,0], [2,0], [3,0], [6,0], [6,1]
 // sentence.value += "He can and should finish the job. "; // [1,0], [11,0], [6,0], [1,1], [3,0]
@@ -91,7 +91,7 @@ sentence.value += "My brother and I are getting together for dinner. "; // 1 [1,
 // sentence.value += "And finish. "; // [1,0], [11,0], [6,0], [1,1], [3,0]
 // sentence.value += "Everyone wondered when would end the play. "; // [1,0], [1,1], [7,0], [3,0], [11,0]
 // sentence.value += "You choose a color that you like. "; // [1,0], [1,1], [3,0], [7,0]
-// sentence.value += "The ship drew-on and had safely passed the strait. "; // [6,0]
+sentence.value += "The ship drew-on and had safely passed the strait. "; // [6,0]
 // sentence.value += "The young man left his station by the pilot once he spotted the owner. " // [7,0], [7,1]
 
 /* =========== за 3,0 следует 3,0 =========== */
