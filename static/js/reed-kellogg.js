@@ -91,7 +91,7 @@ function processSentence() {
 // sentence.value += "And finish. "; // [1,0], [11,0], [6,0], [1,1], [3,0]
 // sentence.value += "Everyone wondered when would end the play. "; // [1,0], [1,1], [7,0], [3,0], [11,0]
 // sentence.value += "You choose a color that you like. "; // [1,0], [1,1], [3,0], [7,0]
-sentence.value += "The ship drew-on and had safely passed the strait. "; // [6,0]
+// sentence.value += "The ship drew-on and had safely passed the strait. "; // [6,0]
 // sentence.value += "The young man left his station by the pilot once he spotted the owner. " // [7,0], [7,1]
 
 /* =========== за 3,0 следует 3,0 =========== */
@@ -99,7 +99,7 @@ sentence.value += "The ship drew-on and had safely passed the strait. "; // [6,0
 // sentence.value += "The students worked so very hard. "; // [1,0], [3,0], [3,0], [3,0], [3,0]
 
 /* 9 правило */
-// sentence.value += "Leaving his station by the pilot, the young man on board saw this person approach. ";
+sentence.value += "Leaving his station by the pilot, the young man on board saw this person approach. ";
 // sentence.value += "Trailblazers are the ones who make the world go around. ";
 // sentence.value += "Trailblazers make the world go round. ";
 // sentence.value += "The young man on board saw this person approach. ";
@@ -131,8 +131,6 @@ var tind = 20; // text indent
 var prht = 10; // padding right
 /* длина линии */
 var lh1 = 25, lh2 = 16, lh3 = 35, lh4 = 50, lh6 = 30, lh7 = 120, lh8 = 50, lh9 = 70;
-
-var currentNode = {};
 var parents = 0;
 
 function drawSents(nodeList) {
@@ -141,12 +139,11 @@ function drawSents(nodeList) {
   canvas.className = 'border';
   
   for (var i = 0; i < nodeList.length; i++) {
-    currentNode = {};
     parents = 0;
 
     console.log('<<<<<<<<< Sentence', i, '>>>>>>>>>');
     setParentCoords(nodeList[i]);
-    processTree(nodeList[i], currentNode, 0);
+    processTree(nodeList[i], 0);
     clearWords();
 
     // if (parents > 1) {
@@ -159,9 +156,9 @@ function drawSents(nodeList) {
     graph.clearRect(0, 0, canvas.width, canvas.height);
     graph.beginPath();
     graph.moveTo(x, y);
-    correctCoords(currentNode);
-    drawParent(currentNode);
-    drawTree(currentNode);
+    correctCoords(nodeList[i]);
+    drawParent(nodeList[i]);
+    drawTree(nodeList[i]);
     graph.stroke();
     graph.restore();
 
@@ -173,7 +170,6 @@ function drawSents(nodeList) {
       out.appendChild(img);
     }
     console.log(nodeList[i]);
-    // console.log(currentNode);
   }
 }
 
@@ -187,36 +183,34 @@ function clearWords() {
 function setParentCoords(node) {
   var rule = node.rule + '' + node.subRule;
 
-  currentNode = copy(node);
-  currentNode.x = x;
-  currentNode.y = y;
-  currentNode.left = tind;
+  node.x = x;
+  node.y = y;
+  node.left = tind;
 
   if (rule == '90') {
-    currentNode.left += tind*2 + lh2*2;
-    Object.defineProperty(currentNode, 'right', {
+    node.left += tind*2 + lh2*2;
+    Object.defineProperty(node, 'right', {
       get: function() { return this.x + this.left + tind + tw(this.value); }
     });
   } else if (rule != '41') {
-    Object.defineProperty(currentNode, 'right', {
+    Object.defineProperty(node, 'right', {
       get: function() { return right.call(this); }
     });
   }
 }
 
-function processTree(nodeTree, newTree, id) {
-  for (var i = 0, j = 0; i < nodeTree.childs.length; i++) {
+function processTree(nodeTree, id) {
+  for (var i = 0; i < nodeTree.childs.length; i++) {
     var r = nodeTree.childs[i].rule;
-    j = newTree.childs.push(copy(nodeTree.childs[i]));
-    newTree.childs[j - 1].parent = newTree;
-    newTree.childs[j - 1].id = id;
-    rules[r - 1].getData(newTree.childs[j - 1]);
-    processTree(nodeTree.childs[i], newTree.childs[j - 1], id + 1);
+    nodeTree.childs[i].parent = nodeTree;
+    nodeTree.childs[i].id = id;
+    rules[r - 1].getData(nodeTree.childs[i]);
+    processTree(nodeTree.childs[i], id + 1);
   }
 }
 
 function correctCoords(node) {
-  var rect = getRect(currentNode);
+  var rect = getRect(node);
   node.x += x - rect.left;
   node.y += y - rect.top;
   canvas.width = rect.right + (x - rect.left) + x; // x как отступ
@@ -238,7 +232,7 @@ function drawTree(nodeTree) {
 }
 
 function getRect(node, rect) {
-  var node = node || { 'childs':[] };
+  var node = node;
   var rect = rect || {
     'top': y,
     'right': x,
@@ -246,33 +240,31 @@ function getRect(node, rect) {
     'left': x,
   };
   var r = node.rule, sr = node.subRule;
-  if ('x' in node) {
-    var xt = node.x, yt = node.y, rt = node.right || node.x;
+  var xt = node.x, yt = node.y, rt = node.right || node.x;
 
-    if (r == 6) {
-      rect.left = Math.min(rect.left, xt - tind - lh6);
-    } else if (r == 4 && sr == 1) {
-      rect.left = Math.min(rect.left, xt - lh4);
-    } else {
-      rect.left = Math.min(rect.left, xt);
-    }
-
-    if (r == 1 && sr == 0) {
-      rect.bottom = Math.max(rect.bottom, yt + lh1);
-    } else {
-      rect.bottom = Math.max(rect.bottom, yt);
-    }
-
-    if (r == 4 && sr == 1) {
-      rect.top = Math.min(rect.top, yt - deg50(lh4));
-    } else if (r == 6 && sr == 0 && node.as == 'child') {
-      rect.top = Math.min(rect.top, yt - deg50(lh6) + th);
-    } else {
-      rect.top = Math.min(rect.top, yt);
-    }
-
-    rect.right = Math.max(rect.right, rt);
+  if (r == 6) {
+    rect.left = Math.min(rect.left, xt - tind - lh6);
+  } else if (r == 4 && sr == 1) {
+    rect.left = Math.min(rect.left, xt - lh4);
+  } else {
+    rect.left = Math.min(rect.left, xt);
   }
+
+  if (r == 1 && sr == 0) {
+    rect.bottom = Math.max(rect.bottom, yt + lh1);
+  } else {
+    rect.bottom = Math.max(rect.bottom, yt);
+  }
+
+  if (r == 4 && sr == 1) {
+    rect.top = Math.min(rect.top, yt - deg50(lh4));
+  } else if (r == 6 && sr == 0 && node.as == 'child') {
+    rect.top = Math.min(rect.top, yt - deg50(lh6) + th);
+  } else {
+    rect.top = Math.min(rect.top, yt);
+  }
+
+  rect.right = Math.max(rect.right, rt);
 
   for (var i = 0; i < node.childs.length; i++) {
     getRect(node.childs[i], rect);
@@ -330,24 +322,6 @@ function copy(obj) {
   }
 
   return res;
-}
-
-function change7_10(node, rule, srule) {
-  if (node.rule == 7 || node.rule == 10) {
-    var out = node.rule + ',' + node.subRule + ' = ' + rule + ',' + srule + ' ' + node.value;
-
-    if (node.parent) {
-      node.parent.childs.push(copy(node));
-      console.log(out);
-    } else {
-      console.log(out, 'not pushed');
-    }
-
-    node.rule = rule;
-    node.as = 'parent';
-
-    if (!isNaN(srule)) node.subRule = srule;
-  }
 }
 
 // return text width
@@ -426,7 +400,6 @@ function Rule1() {
     } else { // Rule(1:0)
       // __ child __|__ parent __
       //            |
-      // change7_10(node.parent, 1, 0);
       setChildCoords(node);
       Object.defineProperties(node, {
         'x': {
@@ -541,7 +514,6 @@ function Rule3() {
       //    \
       //     \ child
       //      \
-      // change7_10(node.parent, 3, 0);
       setChildCoords(node);
       node.width = Math.max(tw(node.value) + lh3/2 + th/2, lh3) + prht;
       Object.defineProperties(node, {

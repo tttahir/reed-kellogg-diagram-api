@@ -1,6 +1,5 @@
 import tornado.ioloop
 import tornado.web
-import socket
 import json
 import os
 from reed_kellogg import parse_sentence
@@ -47,7 +46,7 @@ if __name__ == '__main__':
 
     print('Loading server')
     application.listen(int(port))
-    host_name = socket.gethostbyname(socket.gethostname())
+    host_name = tornado.httpserver.socket.gethostbyname(tornado.httpserver.socket.gethostname())
     origin = protocol + host_name + ':' + port + '/'
     print('Running on:', origin)
     tornado.ioloop.IOLoop.instance().start()
