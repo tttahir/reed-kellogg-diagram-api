@@ -1,15 +1,16 @@
 # Diagramming Sentences
 
-В поле ввода вводится предложение на английском. Дальше предложение обрабатывается - слова разделяются и между ними устанавливается связь на основе грамматики английского языка. После обработки связи рисуются по правилам Рида и Келлога.
+## Зависимости
 
-## Зависимости:
+1. Spacy: `pip3 install spacy`
 
-1. Spacy
-   sudo pip3 install spacy
+2. Spacy english model:
+   `python3 -m spacy download en-core-web-sm`
 
-2. Spacy english model
-   python3 -m spacy download en
+## Запуск
 
-## Запуск:
+Выполнить команду в терминале: `python3 server.py [port]`
 
-1. Выполнить команду в терминале: sudo python3 server.py [port]
+## Пример
+
+`ferch(http://api.com/process-sentence?sentence=sentence)`
