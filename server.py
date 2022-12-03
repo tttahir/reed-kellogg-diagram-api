@@ -1,52 +1,43 @@
-import tornado.ioloop
-import tornado.web
+from http.server import BaseHTTPRequestHandler
+from http.server import HTTPServer
 import json
-import os
+from urllib.parse import urlparse, parse_qs
+
 from reed_kellogg import parse_sentence
 
 
-print('Run server')
+class HttpGetHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "application/json")
+        self.end_headers()
+        url = urlparse(self.path)
+
+        if url.path == '/process-sentence':
+            queries = parse_qs(url.query)
+
+            if "sentence" in queries:
+                sentence = queries["sentence"][0]
+                sent_list = parse_sentence(sentence)
+                response = json.dumps(sent_list).encode('utf-8')
+                self.wfile.write(response)
 
 
-class MainHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.render('index.html', debug=debug)
-
-class ProcessSentenceHandler(tornado.web.RequestHandler):
-    def post(self):
-        sentence = self.get_argument('sentence', '')
-        sent_list = parse_sentence(sentence)
-        response = json.dumps(sent_list)
-        print(response)
-        self.write(response)
-
-
-application = tornado.web.Application([
-    (r'/', MainHandler),
-    (r'/process', ProcessSentenceHandler)
-    ],
-    template_path = os.path.join(os.path.dirname(__file__), 'templates'),
-    static_path = os.path.join(os.path.dirname(__file__), 'static'),
-    autoreload = True,
-    debug = True
-)
-
-if __name__ == '__main__':
-    port = '80'
-    debug = 'false'
-    protocol = 'http://'
-    
+def run(server_class=HTTPServer, handler_class=HttpGetHandler, port=8080):
+    server_address = ('', port)
+    httpd = server_class(server_address, handler_class)
     try:
-        f = open('config.json','r')
-        config = json.load(f)
-        port = config['server-port']
-        debug = config['debug']
-    except Exception as e:
-        print('Can not load file config.json:', e)
+        print('Run server in port:', port)
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print('Close server')
+        httpd.server_close()
 
-    print('Loading server')
-    application.listen(int(port))
-    host_name = tornado.httpserver.socket.gethostbyname(tornado.httpserver.socket.gethostname())
-    origin = protocol + host_name + ':' + port + '/'
-    print('Running on:', origin)
-    tornado.ioloop.IOLoop.instance().start()
+
+if __name__ == "__main__":
+    from sys import argv
+
+    if len(argv) == 2:
+        run(port=int(argv[1]))
+    else:
+        run()

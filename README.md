@@ -4,24 +4,12 @@
 
 ## Зависимости:
 
-1. Tornado
-   sudo pip3 install Tornado
-
-2. Spacy
+1. Spacy
    sudo pip3 install spacy
 
-3. Spacy english model
+2. Spacy english model
    python3 -m spacy download en
 
 ## Запуск:
 
-1. Переименовать файл config.example на config.json
-2. В config.json задать свои значения:<br/>
-   "server-protocol": "http://", - протокол сервера<br/>
-   "server-port": "80", - порт сервера<br/>
-   "server-ip": "localhost", - адресс сервера<br/>
-   "debug": "false" - для правильной работы скрипта это значение не рекомендуется менять
-
-3. Выполнить команду в терминале: sudo python3 server.py
-4. Запустить один из браузеров: Google Chrome 64, Mozilla Firefox 58, Microsoft Edge 16
-5. Перейти по адресу server-protocol + server-ip + ':' + server-port
+1. Выполнить команду в терминале: sudo python3 server.py [port]
